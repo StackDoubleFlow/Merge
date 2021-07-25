@@ -3,11 +3,11 @@
 extern "C" void setup(ModInfo &info) {
     info.id = "Merge";
     info.version = VERSION;
-    CJDLogger::modInfo = info;
+    MLogger::modInfo = info;
 }
 
 extern "C" void load() {
-    CJDLogger::GetLogger().info("Loading Merge");
+    MLogger::GetLogger().info("Loading Merge");
 
     
 }
