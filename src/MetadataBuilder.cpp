@@ -256,11 +256,7 @@ void *MetadataBuilder::Finish() {
     BUILD_METADATA(interfaceOffsets)
     BUILD_METADATA(typeDefinitions)
     BUILD_METADATA(images)
-    MLogger::GetLogger().info("size %lu", assemblies.size() * sizeof(decltype(assemblies)::value_type));
-    MLogger::GetLogger().info("There should be %lu assembles", assemblies.size());
-    MLogger::GetLogger().info("Assemblies offset is at %i", i);
     BUILD_METADATA(assemblies)
-    MLogger::GetLogger().info("Assemblies size is %i", newHeader->assembliesCount);
     BUILD_METADATA(metadataUsageLists)
     BUILD_METADATA(metadataUsagePairs)
     BUILD_METADATA(fieldRefs)
@@ -271,12 +267,6 @@ void *MetadataBuilder::Finish() {
     BUILD_METADATA(unresolvedVirtualCallParameterRanges)
     BUILD_METADATA_FUCKED(windowsRuntimeTypeNames, windowsRuntimeTypeNamesSize)
     BUILD_METADATA(exportedTypeDefinitions)
-
-    for (size_t i = 0; i < newHeader->assembliesCount / sizeof(Il2CppAssemblyDefinition); i++) {
-        Il2CppAssemblyDefinition assembly = *MetadataOffset<const Il2CppAssemblyDefinition*>(metadata, newHeader->assembliesOffset, i);
-        const char *name = MetadataOffset<const char*>(metadata, newHeader->stringOffset, assembly.aname.nameIndex);
-        MLogger::GetLogger().info("Assembly name is %s", name);
-    }
     
     MLogger::GetLogger().debug("Built new metadata at %p with size %i", metadata, i);
 
