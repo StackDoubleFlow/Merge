@@ -68,148 +68,147 @@ MetadataOffsets MetadataBuilder::AppendMetadata(const void *metadata) {
         string.push_back(c);
     }
 
-    for (size_t i = 0; i < header->eventsCount; i++) {
+    for (size_t i = 0; i < header->eventsCount / sizeof(Il2CppEventDefinition); i++) {
         Il2CppEventDefinition event = *MetadataOffset<const Il2CppEventDefinition*>(metadata, header->eventsOffset, i);
         events.push_back(event);
     }
 
-    for (size_t i = 0; i < header->propertiesCount; i++) {
+    for (size_t i = 0; i < header->propertiesCount / sizeof(Il2CppPropertyDefinition); i++) {
         Il2CppPropertyDefinition property = *MetadataOffset<const Il2CppPropertyDefinition*>(metadata, header->propertiesOffset, i);
         properties.push_back(property);
     }
 
-    MLogger::GetLogger().info("header->methodsCount %i", header->methodsCount);
-    for (size_t i = 0; i < header->methodsCount; i++) {
+    for (size_t i = 0; i < header->methodsCount / sizeof(Il2CppMethodDefinition); i++) {
         Il2CppMethodDefinition method = *MetadataOffset<const Il2CppMethodDefinition*>(metadata, header->methodsOffset, i);
         methods.push_back(method);
     }
 
-    for (size_t i = 0; i < header->parameterDefaultValuesCount; i++) {
+    for (size_t i = 0; i < header->parameterDefaultValuesCount / sizeof(Il2CppParameterDefaultValue); i++) {
         Il2CppParameterDefaultValue parameterDefaultValue = *MetadataOffset<const Il2CppParameterDefaultValue*>(metadata, header->parameterDefaultValuesOffset, i);
         parameterDefaultValues.push_back(parameterDefaultValue);
     }
 
-    for (size_t i = 0; i < header->fieldDefaultValuesCount; i++) {
+    for (size_t i = 0; i < header->fieldDefaultValuesCount / sizeof(Il2CppFieldDefaultValue); i++) {
         Il2CppFieldDefaultValue fieldDefaultValue = *MetadataOffset<const Il2CppFieldDefaultValue*>(metadata, header->fieldDefaultValuesOffset, i);
         fieldDefaultValues.push_back(fieldDefaultValue);
     }
 
-    for (size_t i = 0; i < header->fieldAndParameterDefaultValueDataCount; i++) {
+    for (size_t i = 0; i < header->fieldAndParameterDefaultValueDataCount / sizeof(uint8_t); i++) {
         uint8_t defaultValue = *MetadataOffset<const uint8_t*>(metadata, header->eventsOffset, i);
         fieldAndParameterDefaultValueData.push_back(defaultValue);
     }
 
-    for (size_t i = 0; i < header->fieldMarshaledSizesCount; i++) {
+    for (size_t i = 0; i < header->fieldMarshaledSizesCount / sizeof(Il2CppFieldMarshaledSize); i++) {
         Il2CppFieldMarshaledSize fieldMarshaledSize = *MetadataOffset<const Il2CppFieldMarshaledSize*>(metadata, header->fieldMarshaledSizesOffset, i);
         fieldMarshaledSizes.push_back(fieldMarshaledSize);
     }
 
-    for (size_t i = 0; i < header->parametersCount; i++) {
+    for (size_t i = 0; i < header->parametersCount / sizeof(Il2CppParameterDefinition); i++) {
         Il2CppParameterDefinition parameter = *MetadataOffset<const Il2CppParameterDefinition*>(metadata, header->parametersOffset, i);
         parameters.push_back(parameter);
     }
 
-    for (size_t i = 0; i < header->fieldsCount; i++) {
+    for (size_t i = 0; i < header->fieldsCount / sizeof(Il2CppFieldDefinition); i++) {
         Il2CppFieldDefinition field = *MetadataOffset<const Il2CppFieldDefinition*>(metadata, header->fieldsOffset, i);
         fields.push_back(field);
     }
 
-    for (size_t i = 0; i < header->genericParametersCount; i++) {
+    for (size_t i = 0; i < header->genericParametersCount / sizeof(Il2CppGenericParameter); i++) {
         Il2CppGenericParameter genericParameter = *MetadataOffset<const Il2CppGenericParameter*>(metadata, header->genericParametersOffset, i);
         genericParameters.push_back(genericParameter);
     }
 
-    for (size_t i = 0; i < header->genericParameterConstraintsCount; i++) {
+    for (size_t i = 0; i < header->genericParameterConstraintsCount / sizeof(TypeIndex); i++) {
         TypeIndex genericParameterConstraint = *MetadataOffset<const TypeIndex*>(metadata, header->genericParameterConstraintsOffset, i);
         genericParameterConstraints.push_back(genericParameterConstraint);
     }
 
-    for (size_t i = 0; i < header->genericContainersCount; i++) {
+    for (size_t i = 0; i < header->genericContainersCount / sizeof(Il2CppGenericContainer); i++) {
         Il2CppGenericContainer genericContainer = *MetadataOffset<const Il2CppGenericContainer*>(metadata, header->genericContainersOffset, i);
         genericContainers.push_back(genericContainer);
     }
 
-    for (size_t i = 0; i < header->nestedTypesCount; i++) {
+    for (size_t i = 0; i < header->nestedTypesCount / sizeof(TypeDefinitionIndex); i++) {
         TypeDefinitionIndex event = *MetadataOffset<const TypeDefinitionIndex*>(metadata, header->nestedTypesOffset, i);
         nestedTypes.push_back(event);
     }
 
-    for (size_t i = 0; i < header->interfacesCount; i++) {
+    for (size_t i = 0; i < header->interfacesCount / sizeof(TypeIndex); i++) {
         TypeIndex event = *MetadataOffset<const TypeIndex*>(metadata, header->interfacesOffset, i);
         interfaces.push_back(event);
     }
 
-    for (size_t i = 0; i < header->vtableMethodsCount; i++) {
+    for (size_t i = 0; i < header->vtableMethodsCount / sizeof(EncodedMethodIndex); i++) {
         EncodedMethodIndex event = *MetadataOffset<const EncodedMethodIndex*>(metadata, header->vtableMethodsOffset, i);
         vtableMethods.push_back(event);
     }
 
-    for (size_t i = 0; i < header->interfaceOffsetsCount; i++) {
+    for (size_t i = 0; i < header->interfaceOffsetsCount / sizeof(Il2CppInterfaceOffsetPair); i++) {
         Il2CppInterfaceOffsetPair event = *MetadataOffset<const Il2CppInterfaceOffsetPair*>(metadata, header->interfaceOffsetsOffset, i);
         interfaceOffsets.push_back(event);
     }
 
-    for (size_t i = 0; i < header->typeDefinitionsCount; i++) {
+    for (size_t i = 0; i < header->typeDefinitionsCount / sizeof(Il2CppTypeDefinition); i++) {
         Il2CppTypeDefinition event = *MetadataOffset<const Il2CppTypeDefinition*>(metadata, header->typeDefinitionsOffset, i);
         typeDefinitions.push_back(event);
     }
 
-    for (size_t i = 0; i < header->imagesCount; i++) {
+    for (size_t i = 0; i < header->imagesCount / sizeof(Il2CppImageDefinition); i++) {
         Il2CppImageDefinition event = *MetadataOffset<const Il2CppImageDefinition*>(metadata, header->imagesOffset, i);
         images.push_back(event);
     }
 
-    for (size_t i = 0; i < header->assembliesCount; i++) {
+    for (size_t i = 0; i < header->assembliesCount / sizeof(Il2CppAssemblyDefinition); i++) {
         Il2CppAssemblyDefinition event = *MetadataOffset<const Il2CppAssemblyDefinition*>(metadata, header->assembliesOffset, i);
         assemblies.push_back(event);
     }
 
-    for (size_t i = 0; i < header->metadataUsageListsCount; i++) {
+    for (size_t i = 0; i < header->metadataUsageListsCount / sizeof(Il2CppMetadataUsageList); i++) {
         Il2CppMetadataUsageList event = *MetadataOffset<const Il2CppMetadataUsageList*>(metadata, header->metadataUsageListsOffset, i);
         metadataUsageLists.push_back(event);
     }
 
-    for (size_t i = 0; i < header->metadataUsagePairsCount; i++) {
+    for (size_t i = 0; i < header->metadataUsagePairsCount / sizeof(Il2CppMetadataUsagePair); i++) {
         Il2CppMetadataUsagePair event = *MetadataOffset<const Il2CppMetadataUsagePair*>(metadata, header->metadataUsagePairsOffset, i);
         metadataUsagePairs.push_back(event);
     }
 
-    for (size_t i = 0; i < header->fieldRefsCount; i++) {
+    for (size_t i = 0; i < header->fieldRefsCount / sizeof(Il2CppFieldRef); i++) {
         Il2CppFieldRef event = *MetadataOffset<const Il2CppFieldRef*>(metadata, header->fieldRefsOffset, i);
         fieldRefs.push_back(event);
     }
 
-    for (size_t i = 0; i < header->referencedAssembliesCount; i++) {
+    for (size_t i = 0; i < header->referencedAssembliesCount / sizeof(int32_t); i++) {
         int32_t event = *MetadataOffset<const int32_t*>(metadata, header->referencedAssembliesOffset, i);
         referencedAssemblies.push_back(event);
     }
 
-    for (size_t i = 0; i < header->attributesInfoCount; i++) {
+    for (size_t i = 0; i < header->attributesInfoCount / sizeof(Il2CppCustomAttributeTypeRange); i++) {
         Il2CppCustomAttributeTypeRange event = *MetadataOffset<const Il2CppCustomAttributeTypeRange*>(metadata, header->attributesInfoOffset, i);
         attributesInfo.push_back(event);
     }
 
-    for (size_t i = 0; i < header->attributeTypesCount; i++) {
+    for (size_t i = 0; i < header->attributeTypesCount / sizeof(TypeIndex); i++) {
         TypeIndex event = *MetadataOffset<const TypeIndex*>(metadata, header->attributeTypesOffset, i);
         attributeTypes.push_back(event);
     }
 
-    for (size_t i = 0; i < header->unresolvedVirtualCallParameterTypesCount; i++) {
+    for (size_t i = 0; i < header->unresolvedVirtualCallParameterTypesCount / sizeof(TypeIndex); i++) {
         TypeIndex event = *MetadataOffset<const TypeIndex*>(metadata, header->unresolvedVirtualCallParameterTypesOffset, i);
         unresolvedVirtualCallParameterTypes.push_back(event);
     }
 
-    for (size_t i = 0; i < header->unresolvedVirtualCallParameterRangesCount; i++) {
+    for (size_t i = 0; i < header->unresolvedVirtualCallParameterRangesCount / sizeof(Il2CppRange); i++) {
         Il2CppRange event = *MetadataOffset<const Il2CppRange*>(metadata, header->unresolvedVirtualCallParameterRangesOffset, i);
         unresolvedVirtualCallParameterRanges.push_back(event);
     }
 
-    for (size_t i = 0; i < header->windowsRuntimeTypeNamesSize; i++) {
+    for (size_t i = 0; i < header->windowsRuntimeTypeNamesSize / sizeof(Il2CppWindowsRuntimeTypeNamePair); i++) {
         Il2CppWindowsRuntimeTypeNamePair event = *MetadataOffset<const Il2CppWindowsRuntimeTypeNamePair*>(metadata, header->windowsRuntimeTypeNamesOffset, i);
         windowsRuntimeTypeNames.push_back(event);
     }
 
-    for (size_t i = 0; i < header->exportedTypeDefinitionsCount; i++) {
+    for (size_t i = 0; i < header->exportedTypeDefinitionsCount / sizeof(TypeDefinitionIndex); i++) {
         TypeDefinitionIndex event = *MetadataOffset<const TypeDefinitionIndex*>(metadata, header->exportedTypeDefinitionsOffset, i);
         exportedTypeDefinitions.push_back(event);
     }
