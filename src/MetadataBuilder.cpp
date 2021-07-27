@@ -216,6 +216,16 @@ MetadataOffsets MetadataBuilder::AppendMetadata(const void *metadata) {
     return offsets;
 }
 
+#define BUILD_METADATA_FUCKED(name, countName) \
+    newHeader->name##Offset = i; \
+    newHeader->countName = name.size() * sizeof(decltype(name)::value_type); \
+    for (auto &item : name) { \
+        *(reinterpret_cast<decltype(name)::value_type *>(reinterpret_cast<uint8_t *>(metadata) + i)) = item; \
+        i += sizeof(decltype(name)::value_type); \
+    }
+
+#define BUILD_METADATA(name) BUILD_METADATA_FUCKED(name, name##Offset)
+
 void *MetadataBuilder::Finish() {
     // TODO: Calculate metadata size
     // but for right now I'll just do 20mb
@@ -224,7 +234,41 @@ void *MetadataBuilder::Finish() {
     newHeader->sanity = 0xFAB11BAF;
     newHeader->version = 24;
 
-    // TODO: Write to the new metadata
+    int32_t i;
+    BUILD_METADATA(stringLiteral)
+    BUILD_METADATA(stringLiteralData)
+    BUILD_METADATA(string)
+    BUILD_METADATA(events)
+    BUILD_METADATA(properties)
+    BUILD_METADATA(methods)
+    BUILD_METADATA(parameterDefaultValues)
+    BUILD_METADATA(fieldDefaultValues)
+    BUILD_METADATA(fieldAndParameterDefaultValueData)
+    BUILD_METADATA(fieldMarshaledSizes)
+    BUILD_METADATA(parameters)
+    BUILD_METADATA(fields)
+    BUILD_METADATA(genericParameters)
+    BUILD_METADATA(genericParameterConstraints)
+    BUILD_METADATA(genericContainers)
+    BUILD_METADATA(nestedTypes)
+    BUILD_METADATA(interfaces)
+    BUILD_METADATA(vtableMethods)
+    BUILD_METADATA(interfaceOffsets)
+    BUILD_METADATA(typeDefinitions)
+    BUILD_METADATA(images)
+    BUILD_METADATA(assemblies)
+    BUILD_METADATA(metadataUsageLists)
+    BUILD_METADATA(metadataUsagePairs)
+    BUILD_METADATA(fieldRefs)
+    BUILD_METADATA(referencedAssemblies)
+    BUILD_METADATA(attributesInfo)
+    BUILD_METADATA(attributeTypes)
+    BUILD_METADATA(unresolvedVirtualCallParameterTypes)
+    BUILD_METADATA(unresolvedVirtualCallParameterRanges)
+    BUILD_METADATA_FUCKED(windowsRuntimeTypeNames, windowsRuntimeTypeNamesSize)
+    BUILD_METADATA(exportedTypeDefinitions)
+    
+    MLogger::GetLogger().debug("Built new metadata at %p with size %i", metadata, i);
 
-    return newHeader;
+    return metadata;
 }
