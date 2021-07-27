@@ -154,13 +154,13 @@ MetadataOffsets MetadataBuilder::AppendMetadata(const void *metadata) {
     }
 
     for (size_t i = 0; i < header->imagesCount / sizeof(Il2CppImageDefinition); i++) {
-        Il2CppImageDefinition event = *MetadataOffset<const Il2CppImageDefinition*>(metadata, header->imagesOffset, i);
-        images.push_back(event);
+        Il2CppImageDefinition image = *MetadataOffset<const Il2CppImageDefinition*>(metadata, header->imagesOffset, i);
+        images.push_back(image);
     }
 
     for (size_t i = 0; i < header->assembliesCount / sizeof(Il2CppAssemblyDefinition); i++) {
-        Il2CppAssemblyDefinition event = *MetadataOffset<const Il2CppAssemblyDefinition*>(metadata, header->assembliesOffset, i);
-        assemblies.push_back(event);
+        Il2CppAssemblyDefinition assembly = *MetadataOffset<const Il2CppAssemblyDefinition*>(metadata, header->assembliesOffset, i);
+        assemblies.push_back(assembly);
     }
 
     for (size_t i = 0; i < header->metadataUsageListsCount / sizeof(Il2CppMetadataUsageList); i++) {
@@ -224,7 +224,7 @@ MetadataOffsets MetadataBuilder::AppendMetadata(const void *metadata) {
         i += sizeof(decltype(name)::value_type); \
     }
 
-#define BUILD_METADATA(name) BUILD_METADATA_FUCKED(name, name##Offset)
+#define BUILD_METADATA(name) BUILD_METADATA_FUCKED(name, name##Count)
 
 void *MetadataBuilder::Finish() {
     // TODO: Calculate metadata size
@@ -256,7 +256,11 @@ void *MetadataBuilder::Finish() {
     BUILD_METADATA(interfaceOffsets)
     BUILD_METADATA(typeDefinitions)
     BUILD_METADATA(images)
+    MLogger::GetLogger().info("size %lu", assemblies.size() * sizeof(decltype(assemblies)::value_type));
+    MLogger::GetLogger().info("There should be %lu assembles", assemblies.size());
+    MLogger::GetLogger().info("Assemblies offset is at %i", i);
     BUILD_METADATA(assemblies)
+    MLogger::GetLogger().info("Assemblies size is %i", newHeader->assembliesCount);
     BUILD_METADATA(metadataUsageLists)
     BUILD_METADATA(metadataUsagePairs)
     BUILD_METADATA(fieldRefs)
@@ -267,6 +271,12 @@ void *MetadataBuilder::Finish() {
     BUILD_METADATA(unresolvedVirtualCallParameterRanges)
     BUILD_METADATA_FUCKED(windowsRuntimeTypeNames, windowsRuntimeTypeNamesSize)
     BUILD_METADATA(exportedTypeDefinitions)
+
+    for (size_t i = 0; i < newHeader->assembliesCount / sizeof(Il2CppAssemblyDefinition); i++) {
+        Il2CppAssemblyDefinition assembly = *MetadataOffset<const Il2CppAssemblyDefinition*>(metadata, newHeader->assembliesOffset, i);
+        const char *name = MetadataOffset<const char*>(metadata, newHeader->stringOffset, assembly.aname.nameIndex);
+        MLogger::GetLogger().info("Assembly name is %s", name);
+    }
     
     MLogger::GetLogger().debug("Built new metadata at %p with size %i", metadata, i);
 
