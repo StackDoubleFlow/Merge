@@ -11,7 +11,8 @@
 MAKE_HOOK(MetadataLoader_LoadMetadataFile, nullptr, void *, const char *fileName) {
     void *baseMetadata = MetadataLoader_LoadMetadataFile(fileName);
     MLogger::GetLogger().debug("MetadataLoader_LoadMetadataFile(\"%s\") = %p", fileName, baseMetadata);
-    return ModLoader::LoadAllMods(baseMetadata);
+    void *newMetadata = ModLoader::LoadAllMods(baseMetadata);
+    return newMetadata;
 }
 
 // void **ModLoader::FindGlobalMetadata() {

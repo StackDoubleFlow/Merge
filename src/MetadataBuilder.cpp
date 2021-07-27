@@ -52,14 +52,14 @@ MetadataOffsets MetadataBuilder::AppendMetadata(const void *metadata) {
 
     MetadataOffsets offsets = CaptureNextOffsets();
 
-    for (size_t i = 0; i < header->stringLiteralCount; i++) {
+    for (size_t i = 0; i < header->stringLiteralCount / sizeof(Il2CppStringLiteral); i++) {
         Il2CppStringLiteral literal = *MetadataOffset<const Il2CppStringLiteral*>(metadata, header->stringLiteralOffset, i);
         literal.dataIndex += offsets.stringLiteralDataOffset;
         stringLiteral.push_back(literal);
     }
 
     for (size_t i = 0; i < header->stringLiteralDataCount; i++) {
-        char c = *MetadataOffset<const char*>(metadata, header->stringLiteralOffset, i);
+        char c = *MetadataOffset<const char*>(metadata, header->stringLiteralDataOffset, i);
         stringLiteralData.push_back(c);
     }
     
@@ -70,6 +70,8 @@ MetadataOffsets MetadataBuilder::AppendMetadata(const void *metadata) {
 
     for (size_t i = 0; i < header->eventsCount / sizeof(Il2CppEventDefinition); i++) {
         Il2CppEventDefinition event = *MetadataOffset<const Il2CppEventDefinition*>(metadata, header->eventsOffset, i);
+        event.nameIndex += offsets.stringOffset;
+        event.typeIndex += offsets.typeDefinitionsOffset;
         events.push_back(event);
     }
 
@@ -80,6 +82,11 @@ MetadataOffsets MetadataBuilder::AppendMetadata(const void *metadata) {
 
     for (size_t i = 0; i < header->methodsCount / sizeof(Il2CppMethodDefinition); i++) {
         Il2CppMethodDefinition method = *MetadataOffset<const Il2CppMethodDefinition*>(metadata, header->methodsOffset, i);
+        method.declaringType += offsets.typeDefinitionsOffset;
+        method.returnType += offsets.typeDefinitionsOffset;
+        method.nameIndex += offsets.stringOffset;
+        method.parameterStart += offsets.parametersOffset;
+        method.genericContainerIndex += offsets.genericContainersOffset;
         methods.push_back(method);
     }
 
@@ -155,11 +162,16 @@ MetadataOffsets MetadataBuilder::AppendMetadata(const void *metadata) {
 
     for (size_t i = 0; i < header->imagesCount / sizeof(Il2CppImageDefinition); i++) {
         Il2CppImageDefinition image = *MetadataOffset<const Il2CppImageDefinition*>(metadata, header->imagesOffset, i);
+        image.nameIndex += offsets.stringOffset;
+        image.typeStart += offsets.typeDefinitionsOffset;
+        // idk if this is correct, it could be attributeTypesOffset
+        image.customAttributeStart += offsets.attributesInfoOffset;
         images.push_back(image);
     }
 
     for (size_t i = 0; i < header->assembliesCount / sizeof(Il2CppAssemblyDefinition); i++) {
         Il2CppAssemblyDefinition assembly = *MetadataOffset<const Il2CppAssemblyDefinition*>(metadata, header->assembliesOffset, i);
+        assembly.aname.nameIndex += offsets.stringOffset;
         assemblies.push_back(assembly);
     }
 
@@ -234,7 +246,7 @@ void *MetadataBuilder::Finish() {
     newHeader->sanity = 0xFAB11BAF;
     newHeader->version = 24;
 
-    int32_t i;
+    int32_t i = sizeof(Il2CppGlobalMetadataHeader);
     BUILD_METADATA(stringLiteral)
     BUILD_METADATA(stringLiteralData)
     BUILD_METADATA(string)
