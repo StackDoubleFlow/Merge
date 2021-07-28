@@ -4,6 +4,7 @@
 #include <string>
 
 struct MModInfo {
+    std::string assemblyName;
     std::string metadataFilename;
     std::string codeFilename;
 };
