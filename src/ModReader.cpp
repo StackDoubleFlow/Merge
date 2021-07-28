@@ -31,6 +31,25 @@ void *ModReader::ReadFile(std::filesystem::path path) {
     }
 }
 
+MModInfo ModReader::ReadModInfo(std::filesystem::path path) {
+    std::ifstream file;
+    if (file.is_open()) {
+        std::string str((std::istreambuf_iterator<char>(file)),
+                        std::istreambuf_iterator<char>());
+        rapidjson::Document doc;
+        doc.Parse(str);
+        std::string metadataFilename = doc["metadataFilename"].GetString();
+        std::string codeFilename = doc["codeFilename"].GetString();
+        return MModInfo{metadataFilename, codeFilename};
+    } else {
+        MLogger::GetLogger().error("Error reading file at %s: %s", path.c_str(),
+                                   strerror(errno));
+        SAFE_ABORT();
+        // unreachable
+        return MModInfo();
+    }
+}
+
 std::vector<RawMod> ModReader::ReadAllMods() {
     std::vector<RawMod> mods;
     std::string_view path = GetModsDirectory();
@@ -45,9 +64,10 @@ std::vector<RawMod> ModReader::ReadAllMods() {
     }
     for (const auto &entry : directory_iterator) {
         fs::path path = entry.path();
-        void *metadata = ReadFile(path / "metadata.dat");
-        void *code = ReadFile(path / "libil2cpp.so");
-        mods.push_back({metadata, code});
+        MModInfo modInfo = ReadModInfo(path / "modInfo.json");
+        void *metadata = ReadFile(path / modInfo.metadataFilename);
+        void *code = ReadFile(path / modInfo.codeFilename);
+        mods.push_back({modInfo, metadata, code});
         MLogger::GetLogger().info("Succesfully read mod %s",
                                   entry.path().c_str());
     }

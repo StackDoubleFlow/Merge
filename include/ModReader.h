@@ -1,9 +1,15 @@
 #pragma once
 
-#include <string>
 #include <filesystem>
+#include <string>
+
+struct MModInfo {
+    std::string metadataFilename;
+    std::string codeFilename;
+};
 
 struct RawMod {
+    MModInfo modInfo;
     void *metadata;
     void *code;
 };
@@ -15,4 +21,5 @@ public:
 private:
     static std::string_view GetModsDirectory();
     static void *ReadFile(std::filesystem::path path);
+    static MModInfo ReadModInfo(std::filesystem::path path);
 };
