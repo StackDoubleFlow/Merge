@@ -13,7 +13,7 @@ std::string_view ModReader::GetModsDirectory() {
 }
 
 void *ModReader::ReadFile(std::filesystem::path path) {
-    std::ifstream file(path);
+    std::ifstream file;
     file.open(path, std::ios::in | std::ios::binary | std::ios::ate);
     if (file.is_open()) {
         std::streampos size = file.tellg();
@@ -57,8 +57,6 @@ std::vector<RawMod> ModReader::ReadAllMods() {
     std::error_code ec;
     auto directory_iterator =
         fs::directory_iterator(path, fs::directory_options::none, ec);
-     MLogger::GetLogger().error("Reading eading mod directory at %s",
-                                   std::string(path).c_str());
     if (ec) {
         std::string pathStr(path);
         MLogger::GetLogger().error("Error reading mod directory at %s: %s",

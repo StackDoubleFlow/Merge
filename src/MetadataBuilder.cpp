@@ -64,6 +64,7 @@ void MetadataBuilder::AppendMetadata(const void *metadata, std::string_view asse
         Il2CppAssemblyDefinition assembly = *MetadataOffset<const Il2CppAssemblyDefinition *>(metadata, header->assembliesOffset, i);
         const char *aname = MetadataOffset<const char *>(metadata, header->stringOffset, assembly.aname.nameIndex);
         if (assemblyName != aname) continue;
+        MLogger::GetLogger().info("Merging metadata from assembly %s", aname);
 
         assembly.aname.nameIndex = AppendString(aname);
         assembly.imageIndex = images.size();

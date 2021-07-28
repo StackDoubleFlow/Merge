@@ -45,10 +45,10 @@ void *ModLoader::LoadAllMods(void *baseMetadata) {
 
     MetadataBuilder builder(baseMetadata);
 
-    // std::vector<RawMod> rawMods = ModReader::ReadAllMods();
-    // for (auto &rawMod : rawMods) {
-    //     builder.AppendMetadata(rawMod.metadata, rawMod.modInfo.assemblyName);
-    // }
+    std::vector<RawMod> rawMods = ModReader::ReadAllMods();
+    for (auto &rawMod : rawMods) {
+        builder.AppendMetadata(rawMod.metadata, rawMod.modInfo.assemblyName);
+    }
 
     return builder.Finish();
 }
