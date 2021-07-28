@@ -101,7 +101,7 @@ MetadataOffsets MetadataBuilder::AppendMetadata(const void *metadata) {
     }
 
     for (size_t i = 0; i < header->fieldAndParameterDefaultValueDataCount / sizeof(uint8_t); i++) {
-        uint8_t defaultValue = *MetadataOffset<const uint8_t*>(metadata, header->eventsOffset, i);
+        uint8_t defaultValue = *MetadataOffset<const uint8_t*>(metadata, header->fieldAndParameterDefaultValueDataOffset, i);
         fieldAndParameterDefaultValueData.push_back(defaultValue);
     }
 
