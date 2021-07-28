@@ -43,12 +43,12 @@ void ModLoader::Initialize() {
 void *ModLoader::LoadAllMods(void *baseMetadata) {
     MLogger::GetLogger().debug("LoadAllMods with baseMetadata at %p", baseMetadata);
 
-    MetadataBuilder builder;
-    builder.AppendMetadata(baseMetadata);
+    MetadataBuilder builder(baseMetadata);
+
+    // std::vector<RawMod> rawMods = ModReader::ReadAllMods();
     // for (auto &rawMod : rawMods) {
-    //     builder.AppendMetadata(rawMod.metadata);
+    //     builder.AppendMetadata(rawMod.metadata, rawMod.modInfo.assemblyName);
     // }
 
-    // (*globalMetadataPtr) = builder.Finish();
     return builder.Finish();
 }

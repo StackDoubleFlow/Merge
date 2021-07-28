@@ -2,47 +2,13 @@
 #include "il2cpp-metadata.h"
 #include "il2cpp-runtime-metadata.h"
 #include <vector>
-
-struct MetadataOffsets {
-    int32_t stringLiteralOffset;
-    int32_t stringLiteralDataOffset;
-    int32_t stringOffset;
-    int32_t eventsOffset;
-    int32_t propertiesOffset;
-    int32_t methodsOffset;
-    int32_t parameterDefaultValuesOffset;
-    int32_t fieldDefaultValuesOffset;
-    int32_t fieldAndParameterDefaultValueDataOffset;
-    int32_t fieldMarshaledSizesOffset;
-    int32_t parametersOffset;
-    int32_t fieldsOffset;
-    int32_t genericParametersOffset;
-    int32_t genericParameterConstraintsOffset;
-    int32_t genericContainersOffset;
-    int32_t nestedTypesOffset;
-    int32_t interfacesOffset;
-    int32_t vtableMethodsOffset;
-    int32_t interfaceOffsetsOffset;
-    int32_t typeDefinitionsOffset;
-    int32_t imagesOffset;
-    int32_t assembliesOffset;
-    int32_t metadataUsageListsOffset;
-    int32_t metadataUsagePairsOffset;
-    int32_t fieldRefsOffset;
-    int32_t referencedAssembliesOffset;
-    int32_t attributesInfoOffset;
-    int32_t attributeTypesOffset;
-    int32_t unresolvedVirtualCallParameterTypesOffset;
-    int32_t unresolvedVirtualCallParameterRangesOffset;
-    int32_t windowsRuntimeTypeNamesOffset;
-    int32_t exportedTypeDefinitionsOffset;
-};
+#include <string_view>
 
 class MetadataBuilder {
 public:
-    MetadataOffsets CaptureNextOffsets();
-    // Appends a metadata to the builder. Returns the offsets that were added to the indexes.
-    MetadataOffsets AppendMetadata(const void *metadata);
+    MetadataBuilder(const void* baseMetadata);
+    void AppendMetadata(const void *metadata, std::string_view assemblyName);
+    StringIndex AppendString(const char *str);
     void *Finish();
 
 private:
