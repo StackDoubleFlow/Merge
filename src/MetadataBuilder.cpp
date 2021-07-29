@@ -55,7 +55,8 @@ MetadataBuilder::MetadataBuilder(const void *baseMetadata) {
 }
 
 void MetadataBuilder::AppendMetadata(const void *metadata, std::string_view assemblyName) {
-    MLogger::GetLogger().debug("Appending metadata to builder from %p with assembly %s", metadata, assemblyName.data());
+    auto logger = MLogger::GetLogger().WithContext("MetadataBuilder::AppendMetadata");
+    logger.debug("Appending metadata to builder from %p with assembly %s", metadata, assemblyName.data());
     auto *header = static_cast<const Il2CppGlobalMetadataHeader *>(metadata);
     CRASH_UNLESS(header->sanity == 0xFAB11BAF);
     CRASH_UNLESS(header->version == 24);
@@ -64,16 +65,48 @@ void MetadataBuilder::AppendMetadata(const void *metadata, std::string_view asse
         Il2CppAssemblyDefinition assembly = *MetadataOffset<const Il2CppAssemblyDefinition *>(metadata, header->assembliesOffset, i);
         const char *aname = MetadataOffset<const char *>(metadata, header->stringOffset, assembly.aname.nameIndex);
         if (assemblyName != aname) continue;
-        MLogger::GetLogger().info("Merging metadata from assembly %s", aname);
+        logger.debug("Merging metadata from assembly %s", aname);
 
+        const char *publicKey = MetadataOffset<const char *>(metadata, header->stringOffset, assembly.aname.publicKeyIndex);
+        const char *culture = MetadataOffset<const char *>(metadata, header->stringOffset, assembly.aname.cultureIndex);
         assembly.aname.nameIndex = AppendString(aname);
+        assembly.aname.publicKeyIndex = AppendString(publicKey);
+        assembly.aname.cultureIndex = AppendString(culture);
+        ImageIndex imageIndex = assembly.imageIndex;
         assembly.imageIndex = images.size();
         AssemblyIndex assemblyIndex = assemblies.size();
         assemblies.push_back(assembly);
 
-        Il2CppImageDefinition image = *MetadataOffset<const Il2CppImageDefinition *>(metadata, header->imagesOffset, assembly.imageIndex);
+        Il2CppImageDefinition image = *MetadataOffset<const Il2CppImageDefinition *>(metadata, header->imagesOffset, imageIndex);
+        const char *imageName = MetadataOffset<const char *>(metadata, header->stringOffset, image.nameIndex);
+        image.nameIndex = AppendString(imageName);
         image.assemblyIndex = assemblyIndex;
+        TypeDefinitionIndex typeStart = typeDefinitions.size();
+
+        for (size_t i = 0; i < image.typeCount; i++) {
+            Il2CppTypeDefinition type = *MetadataOffset<const Il2CppTypeDefinition *>(metadata, header->typeDefinitionsOffset, i + image.typeStart);
+            const char *name = MetadataOffset<const char *>(metadata, header->stringOffset, type.nameIndex);
+            const char *namespaze = MetadataOffset<const char *>(metadata, header->stringOffset, type.namespaceIndex);
+            logger.debug("Adding type %s.%s", namespaze, name);
+            type.nameIndex = AppendString(name);
+            type.namespaceIndex = AppendString(namespaze);
+
+            MethodIndex methodStart = typeDefinitions.size();
+            for (size_t i = 0; i < type.method_count; i++) {
+                Il2CppMethodDefinition method = *MetadataOffset<const Il2CppMethodDefinition *>(metadata, header->methodsOffset, i + type.methodStart);
+                const char *name = MetadataOffset<const char *>(metadata, header->stringOffset, method.nameIndex);
+                logger.debug("Adding method %s", name);
+                method.nameIndex = AppendString(name);
+                methods.push_back(method);
+            }
+            type.methodStart = methodStart;
+
+            typeDefinitions.push_back(type);
+        }
+        image.typeStart = typeStart;
+
         images.push_back(image);
+        return;
     }
 }
 

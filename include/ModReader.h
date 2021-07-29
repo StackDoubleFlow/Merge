@@ -12,7 +12,7 @@ struct MModInfo {
 struct RawMod {
     MModInfo modInfo;
     void *metadata;
-    void *code;
+    void *codeHandle;
 };
 
 class ModReader {

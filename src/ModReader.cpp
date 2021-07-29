@@ -67,8 +67,10 @@ std::vector<RawMod> ModReader::ReadAllMods() {
         fs::path path = entry.path();
         MModInfo modInfo = ReadModInfo(path / "mergeMod.json");
         void *metadata = ReadFile(path / modInfo.metadataFilename);
-        void *code = ReadFile(path / modInfo.codeFilename);
-        mods.push_back({modInfo, metadata, code});
+        fs::path codeDestPath = fs::path(Modloader::getDestinationPath()) / modInfo.codeFilename;
+        fs::copy_file(path / modInfo.codeFilename, codeDestPath);
+        void *codeHandle = dlopen((codeDestPath).c_str(), RTLD_LAZY);
+        mods.push_back({modInfo, metadata, codeHandle});
         MLogger::GetLogger().info("Succesfully read mod %s",
                                   entry.path().c_str());
     }
