@@ -41,8 +41,10 @@ void ModLoader::Initialize() {
     std::set<void (*)()> *registrationCallbacks = *reinterpret_cast<std::set<void (*)()> **>(registrationCallbacksAddr);
     Instruction s_Il2CppCodegenRegistration = reinterpret_cast<int32_t *>(*registrationCallbacks->begin());
     Instruction *j2icr = CRASH_UNLESS(s_Il2CppCodegenRegistration.findNthDirectBranchWithoutLink(1));
-    int32_t *il2cpp_codegen_register = const_cast<int32_t *>(CRASH_UNLESS(j2icr->label));
-    INSTALL_HOOK_DIRECT(logger, MetadataCache_Register, il2cpp_codegen_register);
+    Instruction il2cpp_codegen_register = CRASH_UNLESS(j2icr->label);
+    Instruction *j2MC_R = CRASH_UNLESS(il2cpp_codegen_register.findNthDirectBranchWithoutLink(1));
+    int32_t *MetadataCache_Register = const_cast<int32_t *>(CRASH_UNLESS(j2MC_R->label));
+    INSTALL_HOOK_DIRECT(logger, MetadataCache_Register, MetadataCache_Register);
 
     rawMods = ModReader::ReadAllMods();
 }
