@@ -96,7 +96,7 @@ void MetadataBuilder::AppendMetadata(const void *metadata, std::string_view asse
             for (size_t i = 0; i < type.method_count; i++) {
                 Il2CppMethodDefinition method = *MetadataOffset<const Il2CppMethodDefinition *>(metadata, header->methodsOffset, i + type.methodStart);
                 const char *name = MetadataOffset<const char *>(metadata, header->stringOffset, method.nameIndex);
-                logger.debug("Adding method %s", name);
+                logger.debug("Adding method %s, RID: %i", name, method.token & 0x00FFFFFF);
                 method.nameIndex = AppendString(name);
                 methods.push_back(method);
             }
