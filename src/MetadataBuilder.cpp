@@ -79,6 +79,7 @@ void MetadataBuilder::AppendMetadata(const void *metadata, std::string_view asse
 
         Il2CppImageDefinition image = *MetadataOffset<const Il2CppImageDefinition *>(metadata, header->imagesOffset, imageIndex);
         const char *imageName = MetadataOffset<const char *>(metadata, header->stringOffset, image.nameIndex);
+        logger.debug("Adding image %s", imageName);
         image.nameIndex = AppendString(imageName);
         image.assemblyIndex = assemblyIndex;
         TypeDefinitionIndex typeStart = typeDefinitions.size();
@@ -112,7 +113,7 @@ void MetadataBuilder::AppendMetadata(const void *metadata, std::string_view asse
 
 StringIndex MetadataBuilder::AppendString(const char *str) {
     StringIndex idx = string.size();
-    size_t len = strlen(str);
+    size_t len = strlen(str) + 1;
     for (size_t i = 0; i < len; i++) {
         string.push_back(str[i]);
     }
