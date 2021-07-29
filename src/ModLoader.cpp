@@ -68,6 +68,12 @@ void ModLoader::FixupCodeRegistration(Il2CppCodeRegistration *&codeRegistration,
         codeGenModules.push_back(module);
     }
 
+    std::vector<InvokerMethod> invokerMethods;
+    for (size_t i = 0; i < codeRegistration->invokerPointersCount; i++) {
+        InvokerMethod method = *(codeRegistration->invokerPointers + i);
+        invokerMethods.push_back(method);
+    } 
+
     for (auto &rawMod : rawMods) {
         Instruction ii = static_cast<const int32_t*>(dlsym(rawMod.codeHandle, "il2cpp_init"));
         Instruction *j2R_I = CRASH_UNLESS(ii.findNthCall(2));
@@ -84,11 +90,22 @@ void ModLoader::FixupCodeRegistration(Il2CppCodeRegistration *&codeRegistration,
         
         std::string moduleName = rawMod.modInfo.assemblyName + ".dll";
         for (size_t i = 0; i < g_CodeRegistration->codeGenModulesCount; i++) {
-            const Il2CppCodeGenModule *module = *(g_CodeRegistration->codeGenModules + i);
-            if (moduleName == module->moduleName) {
-                MLogger::GetLogger().debug("Adding codegen module: %s", moduleName.c_str());
-                codeGenModules.push_back(module);
+            Il2CppCodeGenModule *module = const_cast<Il2CppCodeGenModule *>(g_CodeRegistration->codeGenModules[i]);
+            if (moduleName != module->moduleName) {
+                continue;
             }
+            MLogger::GetLogger().debug("Adding codegen module: %s", moduleName.c_str());
+            int32_t invokerOffset = invokerMethods.size();
+            for (size_t i = 0; i < g_CodeRegistration->invokerPointersCount; i++) {
+                InvokerMethod method = *(g_CodeRegistration->invokerPointers + i);
+                invokerMethods.push_back(method);
+            }
+            int32_t *invokerIndices = const_cast<int32_t *>(module->invokerIndices);
+            for (size_t j = 0; j < module->methodPointerCount; j++) {
+                invokerIndices[j] += invokerOffset;
+            }
+            codeGenModules.push_back(module);
+            break;
         }
     }
 
@@ -98,7 +115,13 @@ void ModLoader::FixupCodeRegistration(Il2CppCodeRegistration *&codeRegistration,
         MLogger::GetLogger().debug(" %p: %s", codeGenModules[i], codeGenModules[i]->moduleName);
         newCodegenModules[i] = codeGenModules[i];
     }
-
     codeRegistration->codeGenModulesCount = codeGenModules.size();
     codeRegistration->codeGenModules = newCodegenModules;
+
+    InvokerMethod *newInvokerMethods = new InvokerMethod[invokerMethods.size()];
+    for (size_t i = 0; i < invokerMethods.size(); i++) {
+        newInvokerMethods[i] = invokerMethods[i];
+    }
+    codeRegistration->invokerPointersCount = invokerMethods.size();
+    codeRegistration->invokerPointers = newInvokerMethods;
 }
