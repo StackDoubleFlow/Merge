@@ -1,6 +1,7 @@
 #include "ModLoader.h"
 #include "Logger.h"
 #include "MetadataBuilder.h"
+#include "Mem.h"
 #include "beatsaber-hook/shared/utils/il2cpp-functions.hpp"
 #include "beatsaber-hook/shared/utils/utils.h"
 #include "beatsaber-hook/shared/utils/instruction-parsing.hpp"
@@ -101,6 +102,7 @@ void ModLoader::FixupCodeRegistration(Il2CppCodeRegistration *&codeRegistration,
                 invokerMethods.push_back(method);
             }
             int32_t *invokerIndices = const_cast<int32_t *>(module->invokerIndices);
+            MemProtect(invokerIndices, module->methodPointerCount * sizeof(int32_t *), PROT_READ | PROT_WRITE);
             for (size_t j = 0; j < module->methodPointerCount; j++) {
                 invokerIndices[j] += invokerOffset;
             }
