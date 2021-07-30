@@ -92,7 +92,7 @@ void MetadataBuilder::AppendMetadata(const void *metadata, std::string_view asse
             type.nameIndex = AppendString(name);
             type.namespaceIndex = AppendString(namespaze);
 
-            MethodIndex methodStart = typeDefinitions.size();
+            MethodIndex methodStart = methods.size();
             for (size_t i = 0; i < type.method_count; i++) {
                 Il2CppMethodDefinition method = *MetadataOffset<const Il2CppMethodDefinition *>(metadata, header->methodsOffset, i + type.methodStart);
                 const char *name = MetadataOffset<const char *>(metadata, header->stringOffset, method.nameIndex);
