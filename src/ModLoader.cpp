@@ -65,13 +65,13 @@ void *ModLoader::CreateNewMetadata(void *baseMetadata) {
 void ModLoader::FixupCodeRegistration(Il2CppCodeRegistration *&codeRegistration, Il2CppMetadataRegistration *&metadataRegistration, Il2CppCodeGenOptions *&codeGenOptions) {
     std::vector<const Il2CppCodeGenModule *> codeGenModules;
     for (size_t i = 0; i < codeRegistration->codeGenModulesCount; i++) {
-        const Il2CppCodeGenModule *module = *(codeRegistration->codeGenModules + i);
+        const Il2CppCodeGenModule *module = codeRegistration->codeGenModules[i];
         codeGenModules.push_back(module);
     }
 
     std::vector<InvokerMethod> invokerMethods;
     for (size_t i = 0; i < codeRegistration->invokerPointersCount; i++) {
-        InvokerMethod method = *(codeRegistration->invokerPointers + i);
+        InvokerMethod method = codeRegistration->invokerPointers[i];
         invokerMethods.push_back(method);
     } 
 
@@ -98,8 +98,8 @@ void ModLoader::FixupCodeRegistration(Il2CppCodeRegistration *&codeRegistration,
             MLogger::GetLogger().debug("Adding codegen module: %s", moduleName.c_str());
             int32_t invokerOffset = invokerMethods.size();
             for (size_t i = 0; i < g_CodeRegistration->invokerPointersCount; i++) {
-                InvokerMethod method = *(g_CodeRegistration->invokerPointers + i);
-                invokerMethods.push_back(method);
+                InvokerMethod invoker = g_CodeRegistration->invokerPointers[i];
+                invokerMethods.push_back(invoker);
             }
             int32_t *invokerIndices = const_cast<int32_t *>(module->invokerIndices);
             MemProtect(invokerIndices, module->methodPointerCount * sizeof(int32_t *), PROT_READ | PROT_WRITE);
