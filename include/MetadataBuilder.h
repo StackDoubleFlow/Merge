@@ -1,15 +1,20 @@
 #pragma once
 #include "il2cpp-metadata.h"
 #include "il2cpp-runtime-metadata.h"
-#include <vector>
 #include <string_view>
+#include <vector>
+#include <unordered_map>
 
 class MetadataBuilder {
 public:
-    MetadataBuilder(const void* baseMetadata);
-    void AppendMetadata(const void *metadata, std::string_view assemblyName);
-    StringIndex AppendString(const char *str);
+    MetadataBuilder(const void *baseMetadata);
+    void AppendMetadata(const void *metadata, std::string_view assemblyName, int typeOffset);
     void *Finish();
+
+private:
+    StringIndex AppendString(const char *str);
+    TypeDefinitionIndex RedirectTypeDefinition(std::unordered_map<TypeDefinitionIndex, TypeDefinitionIndex> &typeRedirects,
+                                               TypeDefinitionIndex modType, ImageIndex imageIndex, const void *metadata);
 
 private:
     std::vector<Il2CppStringLiteral> stringLiteral;

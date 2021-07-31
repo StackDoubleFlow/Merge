@@ -56,23 +56,32 @@ void *ModLoader::CreateNewMetadata(void *baseMetadata) {
     MetadataBuilder builder(baseMetadata);
 
     for (auto &rawMod : rawMods) {
-        builder.AppendMetadata(rawMod.metadata, rawMod.modInfo.assemblyName);
+        builder.AppendMetadata(rawMod.metadata, rawMod.modInfo.assemblyName, rawMod.runtimeMetadataTypeOffset);
     }
 
     return builder.Finish();
 }
 
 void ModLoader::FixupCodeRegistration(Il2CppCodeRegistration *&codeRegistration, Il2CppMetadataRegistration *&metadataRegistration, Il2CppCodeGenOptions *&codeGenOptions) {
+    // codeRegistration->codeGenModules
     std::vector<const Il2CppCodeGenModule *> codeGenModules;
     for (size_t i = 0; i < codeRegistration->codeGenModulesCount; i++) {
         const Il2CppCodeGenModule *module = codeRegistration->codeGenModules[i];
         codeGenModules.push_back(module);
     }
 
+    // codeRegistration->invokerPointers
     std::vector<InvokerMethod> invokerMethods;
     for (size_t i = 0; i < codeRegistration->invokerPointersCount; i++) {
         InvokerMethod method = codeRegistration->invokerPointers[i];
         invokerMethods.push_back(method);
+    }
+
+    // metadataRegistration->types
+    std::vector<const Il2CppType *> types;
+    for (size_t i = 0; i < metadataRegistration->typesCount; i++) {
+        const Il2CppType *type = metadataRegistration->types[i];
+        types.push_back(type);
     } 
 
     for (auto &rawMod : rawMods) {
@@ -85,9 +94,16 @@ void ModLoader::FixupCodeRegistration(Il2CppCodeRegistration *&codeRegistration,
         std::set<void (*)()> *registrationCallbacks = *reinterpret_cast<std::set<void (*)()> **>(registrationCallbacksAddr);
         int32_t *s_Il2CppCodegenRegistration = reinterpret_cast<int32_t *>(*registrationCallbacks->begin());
 
-        auto *g_MetadataRegistration = reinterpret_cast<Il2CppMetadataRegistration *>(ExtractAddress(s_Il2CppCodegenRegistration, 1, 1));
+        auto *g_MetadataRegistration = *reinterpret_cast<Il2CppMetadataRegistration **>(ExtractAddress(s_Il2CppCodegenRegistration, 1, 1));
         auto *g_CodeRegistration = reinterpret_cast<Il2CppCodeRegistration *>(ExtractAddress(s_Il2CppCodegenRegistration, 2, 1));
         auto *s_Il2CppCodeGenOptions = reinterpret_cast<Il2CppCodeGenOptions *>(ExtractAddress(s_Il2CppCodegenRegistration, 3, 1));
+
+        rawMod.runtimeMetadataTypeOffset = types.size();
+        MLogger::GetLogger().debug("Adding %i types to runtime metadata type registration at offset %lu", g_MetadataRegistration->typesCount, types.size());
+        for (size_t i = 0; i < g_MetadataRegistration->typesCount; i++) {
+            const Il2CppType *type = g_MetadataRegistration->types[i];
+            types.push_back(type);
+        }
         
         std::string moduleName = rawMod.modInfo.assemblyName + ".dll";
         for (size_t i = 0; i < g_CodeRegistration->codeGenModulesCount; i++) {
@@ -126,4 +142,11 @@ void ModLoader::FixupCodeRegistration(Il2CppCodeRegistration *&codeRegistration,
     }
     codeRegistration->invokerPointersCount = invokerMethods.size();
     codeRegistration->invokerPointers = newInvokerMethods;
+    
+    const Il2CppType **newTypes = new const Il2CppType*[types.size()];
+    for (size_t i = 0; i < types.size(); i++) {
+        newTypes[i] = types[i];
+    }
+    metadataRegistration->typesCount = types.size();
+    metadataRegistration->types = newTypes;
 }

@@ -17,3 +17,10 @@
                    ? __page_align(n) + __page_size                             \
                    : __page_align(n),                                          \
                prot)
+
+void MemDump(void *base, size_t n) {
+    MLogger::GetLogger().debug("Memory dump: %p, n: %zu", base, n);
+    for (size_t i = 0; i < n; i++) {
+        MLogger::GetLogger().debug("%08x", static_cast<int32_t *>(base)[i]);
+    }
+}

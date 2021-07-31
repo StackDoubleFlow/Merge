@@ -13,6 +13,10 @@ struct RawMod {
     MModInfo modInfo;
     void *metadata;
     void *codeHandle;
+
+    // The offset for types in Il2CppMetadataRegistration, set by
+    // ModLoader::FixupCodeRegistration
+    int runtimeMetadataTypeOffset;
 };
 
 class ModReader {

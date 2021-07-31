@@ -54,12 +54,15 @@ MetadataBuilder::MetadataBuilder(const void *baseMetadata) {
     APPEND_BASE(exportedTypeDefinitions)
 }
 
-void MetadataBuilder::AppendMetadata(const void *metadata, std::string_view assemblyName) {
+void MetadataBuilder::AppendMetadata(const void *metadata, std::string_view assemblyName, int typeOffset) {
     auto logger = MLogger::GetLogger().WithContext("MetadataBuilder::AppendMetadata");
     logger.debug("Appending metadata to builder from %p with assembly %s", metadata, assemblyName.data());
     auto *header = static_cast<const Il2CppGlobalMetadataHeader *>(metadata);
     CRASH_UNLESS(header->sanity == 0xFAB11BAF);
     CRASH_UNLESS(header->version == 24);
+
+    // TODO: maybe use these? idk if it's necessary 
+    std::unordered_map<TypeIndex, TypeIndex> typeDefinitionRedirects;
 
     for (size_t i = 0; i < header->assembliesCount / sizeof(Il2CppAssemblyDefinition); i++) {
         Il2CppAssemblyDefinition assembly = *MetadataOffset<const Il2CppAssemblyDefinition *>(metadata, header->assembliesOffset, i);
@@ -98,6 +101,7 @@ void MetadataBuilder::AppendMetadata(const void *metadata, std::string_view asse
                 const char *name = MetadataOffset<const char *>(metadata, header->stringOffset, method.nameIndex);
                 logger.debug("Adding method %s, RID: %i", name, method.token & 0x00FFFFFF);
                 method.nameIndex = AppendString(name);
+                method.returnType += typeOffset;
                 methods.push_back(method);
             }
             type.methodStart = methodStart;
@@ -109,6 +113,48 @@ void MetadataBuilder::AppendMetadata(const void *metadata, std::string_view asse
         images.push_back(image);
         return;
     }
+}
+
+TypeDefinitionIndex MetadataBuilder::RedirectTypeDefinition(std::unordered_map<TypeDefinitionIndex, TypeDefinitionIndex> &typeRedirects,
+                                                            TypeDefinitionIndex modType, ImageIndex imageIndex, const void *metadata) {
+    auto *header = static_cast<const Il2CppGlobalMetadataHeader *>(metadata);
+
+    const Il2CppImageDefinition *image = MetadataOffset<const Il2CppImageDefinition *>(metadata, header->imagesOffset, imageIndex);
+    if (modType >= image->typeStart && modType < image->typeStart + image->typeCount) {
+        // TODO: return the new type index
+        return modType;
+    }
+    
+    auto itr = typeRedirects.find(modType);
+    if (itr != typeRedirects.end()) {
+        return itr->second;
+    }
+
+    // Look for the mod image the type is in
+    for (ImageIndex imageIndex = 0; imageIndex < header->imagesCount / sizeof(Il2CppImageDefinition); imageIndex++) {
+        const Il2CppImageDefinition *modImage = MetadataOffset<const Il2CppImageDefinition *>(metadata, header->imagesOffset, imageIndex);
+        const char *modImageName = MetadataOffset<const char *>(metadata, header->stringOffset, modImage->nameIndex);
+        MLogger::GetLogger().info("Looking for %i in range %i..%i", modType, modImage->typeStart, modImage->typeStart + modImage->typeCount);
+        if (modType >= modImage->typeStart && modType < modImage->typeStart + modImage->typeCount) {
+            // Find our equivalent image
+            for (Il2CppImageDefinition &image : images) {
+                const char *imageName = &string[image.nameIndex];
+                if (strcmp(modImageName, imageName) == 0) {
+                    // This will only work if the offset in the base image is the same as the mod image
+                    int typeOffset = modType - modImage->typeStart;
+                    TypeIndex baseType = image.typeStart + modType;
+                    typeRedirects[modType] = baseType;
+                    return baseType;
+                }
+            }
+            MLogger::GetLogger().error("Could not find equavalent image for %s", modImageName);
+            SAFE_ABORT();
+        }
+    }
+    MLogger::GetLogger().error("Could not mod image containing mod type %i", modType);
+    SAFE_ABORT();
+    // unreachable
+    return -1;
 }
 
 StringIndex MetadataBuilder::AppendString(const char *str) {
