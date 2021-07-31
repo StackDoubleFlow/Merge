@@ -102,6 +102,15 @@ void MetadataBuilder::AppendMetadata(const void *metadata, std::string_view asse
                 logger.debug("Adding method %s, RID: %i", name, method.token & 0x00FFFFFF);
                 method.nameIndex = AppendString(name);
                 method.returnType += typeOffset;
+                ParameterIndex parameterStart = parameters.size();
+                for (size_t i = 0; i < method.parameterCount; i++) {
+                    Il2CppParameterDefinition param = *MetadataOffset<const Il2CppParameterDefinition *>(metadata, header->parametersOffset, i + method.parameterStart);
+                    const char *name = MetadataOffset<const char *>(metadata, header->stringOffset, param.nameIndex);
+                    param.nameIndex = AppendString(name);
+                    param.typeIndex += typeOffset;
+                    parameters.push_back(param);
+                }
+                method.parameterStart = parameterStart;
                 methods.push_back(method);
             }
             type.methodStart = methodStart;
