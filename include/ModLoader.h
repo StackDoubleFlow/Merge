@@ -1,5 +1,6 @@
 #pragma once
 #include "MetadataBuilder.h"
+#include "CodeGenModuleBuilder.h"
 #include "ModReader.h"
 
 struct Il2CppCodeRegistration;
@@ -13,7 +14,8 @@ public:
     FixupCodeRegistration(Il2CppCodeRegistration *&codeRegistration,
                           Il2CppMetadataRegistration *&metadataRegistration,
                           Il2CppCodeGenOptions *&codeGenOptions);
-    static int GetNextTypeIndex();
+    static int GetTypesCount();
+    static int GetInvokersCount();
     static void *CreateNewMetadata();
 
 private:
@@ -21,7 +23,10 @@ private:
 
 public:
     static MetadataBuilder metadataBuilder;
-    static std::vector<Il2CppType> addedTypes;
+    static std::vector<Il2CppType *> addedTypes;
+    static std::vector<InvokerMethod> addedInvokers;
+    static std::unordered_map<ImageIndex, CodeGenModuleBuilder>
+        addedCodeGenModules;
 
     // Il2CppCodeRegistration.cpp
     static const Il2CppMetadataRegistration *g_MetadataRegistration;

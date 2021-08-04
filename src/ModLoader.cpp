@@ -63,31 +63,28 @@ void *ModLoader::CreateNewMetadata() {
     return metadataBuilder.Finish();
 }
 
-int ModLoader::GetNextTypeIndex() {
+int ModLoader::GetTypesCount() {
     return g_MetadataRegistration->typesCount + addedTypes.size();
+}
+
+int ModLoader::GetInvokersCount() {
+    return g_CodeRegistration->invokerPointersCount + addedInvokers.size();
 }
 
 void ModLoader::FixupCodeRegistration(Il2CppCodeRegistration *&codeRegistration, Il2CppMetadataRegistration *&metadataRegistration, Il2CppCodeGenOptions *&codeGenOptions) {
     // codeRegistration->codeGenModules
-    std::vector<const Il2CppCodeGenModule *> codeGenModules;
-    for (size_t i = 0; i < codeRegistration->codeGenModulesCount; i++) {
-        const Il2CppCodeGenModule *module = codeRegistration->codeGenModules[i];
-        codeGenModules.push_back(module);
+    std::vector<const Il2CppCodeGenModule *> codeGenModules(codeRegistration->codeGenModules, codeRegistration->codeGenModules + codeRegistration->codeGenModulesCount);
+    for (auto &[image, builder] : addedCodeGenModules) {
+        codeGenModules.push_back(builder.Finish());
     }
 
     // codeRegistration->invokerPointers
-    std::vector<InvokerMethod> invokerMethods;
-    for (size_t i = 0; i < codeRegistration->invokerPointersCount; i++) {
-        InvokerMethod method = codeRegistration->invokerPointers[i];
-        invokerMethods.push_back(method);
-    }
+    std::vector<InvokerMethod> invokerMethods(codeRegistration->invokerPointers, codeRegistration->invokerPointers + codeRegistration->invokerPointersCount);
+    invokerMethods.insert(invokerMethods.end(), addedInvokers.begin(), addedInvokers.end());
 
     // metadataRegistration->types
-    std::vector<const Il2CppType *> types;
-    for (size_t i = 0; i < metadataRegistration->typesCount; i++) {
-        const Il2CppType *type = metadataRegistration->types[i];
-        types.push_back(type);
-    } 
+    std::vector<const Il2CppType *> types(metadataRegistration->types, metadataRegistration->types + metadataRegistration->typesCount);
+    types.insert(types.end(), addedTypes.begin(), addedTypes.end());
 
     for (auto &rawMod : rawMods) {
         Instruction ii = static_cast<const int32_t*>(dlsym(rawMod.codeHandle, "il2cpp_init"));
@@ -132,26 +129,21 @@ void ModLoader::FixupCodeRegistration(Il2CppCodeRegistration *&codeRegistration,
         }
     }
 
-    const Il2CppCodeGenModule **newCodegenModules = new const Il2CppCodeGenModule*[codeGenModules.size()];
-    MLogger::GetLogger().debug("New codegen modules:");
-    for (size_t i = 0; i < codeGenModules.size(); i++) {
-        MLogger::GetLogger().debug(" %p: %s", codeGenModules[i], codeGenModules[i]->moduleName);
-        newCodegenModules[i] = codeGenModules[i];
+    for (const Il2CppCodeGenModule *module : codeGenModules) {
+        MLogger::GetLogger().debug(" %p: %s", module, module->moduleName);
     }
+    const Il2CppCodeGenModule **newCodegenModules = new const Il2CppCodeGenModule*[codeGenModules.size()];
+    std::copy(codeGenModules.begin(), codeGenModules.end(), newCodegenModules);
     codeRegistration->codeGenModulesCount = codeGenModules.size();
     codeRegistration->codeGenModules = newCodegenModules;
 
     InvokerMethod *newInvokerMethods = new InvokerMethod[invokerMethods.size()];
-    for (size_t i = 0; i < invokerMethods.size(); i++) {
-        newInvokerMethods[i] = invokerMethods[i];
-    }
-    codeRegistration->invokerPointersCount = invokerMethods.size();
+    std::copy(invokerMethods.begin(), invokerMethods.end(), newInvokerMethods);
     codeRegistration->invokerPointers = newInvokerMethods;
+    codeRegistration->invokerPointersCount = invokerMethods.size();
     
     const Il2CppType **newTypes = new const Il2CppType*[types.size()];
-    for (size_t i = 0; i < types.size(); i++) {
-        newTypes[i] = types[i];
-    }
-    metadataRegistration->typesCount = types.size();
+    std::copy(types.begin(), types.end(), newTypes);
     metadataRegistration->types = newTypes;
+    metadataRegistration->typesCount = types.size();
 }

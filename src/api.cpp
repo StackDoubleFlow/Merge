@@ -14,9 +14,11 @@ TypeIndex CreatePointerType(TypeIndex type) {}
 
 ImageIndex CreateImage(std::string_view name) {
     MetadataBuilder &builder = ModLoader::metadataBuilder;
+    char *cname;
+    strcpy(cname, std::string(name).c_str());
 
     Il2CppImageDefinition image;
-    image.nameIndex = builder.AppendString(name.data());
+    image.nameIndex = builder.AppendString(cname);
     image.assemblyIndex = -1;
     image.typeStart = -1;
     image.typeCount = 0;
@@ -30,6 +32,9 @@ ImageIndex CreateImage(std::string_view name) {
 
     ImageIndex idx = builder.images.size();
     builder.images.push_back(image);
+
+    ModLoader::addedCodeGenModules.emplace(idx, cname);
+
     return idx;
 }
 
@@ -60,16 +65,16 @@ TypeDefinitionIndex CreateTypes(AssemblyIndex assembly,
         Il2CppTypeDefinition typeDef;
         typeDef.nameIndex = builder.AppendString(type.name.c_str());
         typeDef.namespaceIndex = builder.AppendString(type.namespaze.c_str());
-        typeDef.byvalTypeIndex = ModLoader::GetNextTypeIndex();
+        typeDef.byvalTypeIndex = ModLoader::GetTypesCount();
         Il2CppType addedType;
         addedType.data.klassIndex = idx;
         addedType.attrs = 0;
         addedType.type = type.typeEnum;
         addedType.byref = false;
-        ModLoader::addedTypes.push_back(addedType);
-        typeDef.byrefTypeIndex = ModLoader::GetNextTypeIndex();
+        ModLoader::addedTypes.push_back(new Il2CppType(addedType));
+        typeDef.byrefTypeIndex = ModLoader::GetTypesCount();
         addedType.byref = true;
-        ModLoader::addedTypes.push_back(addedType);
+        ModLoader::addedTypes.push_back(new Il2CppType(addedType));
         typeDef.declaringTypeIndex = -1;
         typeDef.parentIndex = type.parent;
         typeDef.elementTypeIndex = -1;
