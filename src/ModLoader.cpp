@@ -14,10 +14,8 @@ MAKE_HOOK(MetadataCache_Register, nullptr, void, Il2CppCodeRegistration *codeReg
 }
 
 MAKE_HOOK(MetadataLoader_LoadMetadataFile, nullptr, void *, const char *fileName) {
-    void *baseMetadata = MetadataLoader_LoadMetadataFile(fileName);
-    MLogger::GetLogger().debug("MetadataLoader_LoadMetadataFile(\"%s\") = %p", fileName, baseMetadata);
-    void *newMetadata = ModLoader::CreateNewMetadata(baseMetadata);
-    return newMetadata;
+    MLogger::GetLogger().debug("MetadataLoader_LoadMetadataFile(\"%s\")", fileName);
+    return ModLoader::CreateNewMetadata();
 }
 
 std::vector<RawMod> ModLoader::rawMods;
@@ -47,19 +45,26 @@ void ModLoader::Initialize() {
     int32_t *MetadataCache_Register = const_cast<int32_t *>(CRASH_UNLESS(j2MC_R->label));
     INSTALL_HOOK_DIRECT(logger, MetadataCache_Register, MetadataCache_Register);
 
+    g_MetadataRegistration = *reinterpret_cast<Il2CppMetadataRegistration **>(ExtractAddress(s_Il2CppCodegenRegistration.addr, 1, 1));
+    g_CodeRegistration = reinterpret_cast<Il2CppCodeRegistration *>(ExtractAddress(s_Il2CppCodegenRegistration.addr, 2, 1));
+    s_Il2CppCodeGenOptions = reinterpret_cast<Il2CppCodeGenOptions *>(ExtractAddress(s_Il2CppCodegenRegistration.addr, 3, 1));
+
     rawMods = ModReader::ReadAllMods();
-}
-
-void *ModLoader::CreateNewMetadata(void *baseMetadata) {
-    MLogger::GetLogger().debug("CreateNewMetadata with baseMetadata at %p", baseMetadata);
-
-    MetadataBuilder builder(baseMetadata);
+    void *baseMetadata = ModReader::ReadBaseMetadata();
+    MLogger::GetLogger().debug("ModLoader::Initialize with baseMetadata at %p", baseMetadata);
+    metadataBuilder = MetadataBuilder(baseMetadata);
 
     for (auto &rawMod : rawMods) {
-        builder.AppendMetadata(rawMod.metadata, rawMod.modInfo.assemblyName, rawMod.runtimeMetadataTypeOffset);
+        metadataBuilder.AppendMetadata(rawMod.metadata, rawMod.modInfo.assemblyName, rawMod.runtimeMetadataTypeOffset);
     }
+}
 
-    return builder.Finish();
+void *ModLoader::CreateNewMetadata() {
+    return metadataBuilder.Finish();
+}
+
+int ModLoader::GetNextTypeIndex() {
+    return g_MetadataRegistration->typesCount + addedTypes.size();
 }
 
 void ModLoader::FixupCodeRegistration(Il2CppCodeRegistration *&codeRegistration, Il2CppMetadataRegistration *&metadataRegistration, Il2CppCodeGenOptions *&codeGenOptions) {

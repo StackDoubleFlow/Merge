@@ -3,6 +3,9 @@
 #include "beatsaber-hook/shared/config/config-utils.hpp"
 
 #include <fstream>
+#include <sys/stat.h>
+#include <sys/mman.h> 
+#include <fcntl.h>
 
 namespace fs = std::filesystem;
 
@@ -12,26 +15,32 @@ std::string_view ModReader::GetModsDirectory() {
     return dir;
 }
 
+void *ModReader::ReadBaseMetadata() {
+    fs::path path = Modloader::getModloaderPath();
+    path = path / "../..assets/bin/Data/Managed/Metadata/global-metadata.dat";
+    return ReadFile(path);
+}
+
 void *ModReader::ReadFile(std::filesystem::path path) {
-    std::ifstream file;
-    file.open(path, std::ios::in | std::ios::binary | std::ios::ate);
-    if (file.is_open()) {
-        std::streampos size = file.tellg();
-        char *data = new char[size];
-        file.seekg(0, std::ios::beg);
-        file.read(data, size);
-        file.close();
-        return data;
-    } else {
+    int fd = open(path.c_str(), O_RDONLY);
+    if (fd == -1) {
         MLogger::GetLogger().error("Error reading file at %s: %s", path.c_str(),
                                    strerror(errno));
         SAFE_ABORT();
         // unreachable
         return nullptr;
     }
+
+    struct stat st;
+    fstat(fd, &st);
+    size_t size = st.st_size;
+
+    void *mapped = mmap(nullptr, size, PROT_READ, MAP_PRIVATE, fd, 0);
+    return mapped;
 }
 
 MModInfo ModReader::ReadModInfo(std::filesystem::path path) {
+    
     std::ifstream file(path);
     if (file.is_open()) {
         std::string str((std::istreambuf_iterator<char>(file)),

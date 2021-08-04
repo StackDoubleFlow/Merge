@@ -9,14 +9,14 @@ class MetadataBuilder {
 public:
     MetadataBuilder(const void *baseMetadata);
     void AppendMetadata(const void *metadata, std::string_view assemblyName, int typeOffset);
+    StringIndex AppendString(const char *str);
     void *Finish();
 
 private:
-    StringIndex AppendString(const char *str);
     TypeDefinitionIndex RedirectTypeDefinition(std::unordered_map<TypeDefinitionIndex, TypeDefinitionIndex> &typeRedirects,
                                                TypeDefinitionIndex modType, ImageIndex imageIndex, const void *metadata);
 
-private:
+public:
     std::vector<Il2CppStringLiteral> stringLiteral;
     std::vector<char> stringLiteralData;
     std::vector<char> string;

@@ -22,6 +22,7 @@ struct RawMod {
 class ModReader {
 public:
     static std::vector<RawMod> ReadAllMods();
+    static void *ReadBaseMetadata();
 
 private:
     static std::string_view GetModsDirectory();
