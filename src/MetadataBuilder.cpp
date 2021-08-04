@@ -15,7 +15,7 @@ static T MetadataOffset(const void* metadata, size_t sectionOffset, size_t itemI
 
 #define APPEND_BASE(name) APPEND_BASE_FUCKED(name, name##Count)
 
-MetadataBuilder::MetadataBuilder(const void *baseMetadata) {
+void MetadataBuilder::Initialize(const void *baseMetadata) {
     auto *header = static_cast<const Il2CppGlobalMetadataHeader *>(baseMetadata);
     CRASH_UNLESS(header->sanity == 0xFAB11BAF);
     CRASH_UNLESS(header->version == 24);

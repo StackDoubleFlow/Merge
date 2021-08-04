@@ -7,7 +7,7 @@
 
 class MetadataBuilder {
 public:
-    MetadataBuilder(const void *baseMetadata);
+    void Initialize(const void *baseMetadata);
     void AppendMetadata(const void *metadata, std::string_view assemblyName, int typeOffset);
     StringIndex AppendString(const char *str);
     void *Finish();

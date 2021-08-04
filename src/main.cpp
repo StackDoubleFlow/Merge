@@ -10,4 +10,45 @@ extern "C" void setup(ModInfo &info) {
     ModLoader::Initialize();
 }
 
-extern "C" void load() {}
+template<typename T>
+static T MetadataOffset(const void* metadata, size_t sectionOffset, size_t itemIndex) {
+    return reinterpret_cast<T>(reinterpret_cast<const uint8_t*>(metadata) + sectionOffset) + itemIndex;
+}
+
+#include "beatsaber-hook/shared/utils/il2cpp-utils.hpp"
+#include "beatsaber-hook/shared/utils/byref.hpp"
+extern "C" void load() {
+    // MLogger::GetLogger().info("Found moles class: %s in %s", il2cpp_utils::ClassStandardName(moles).c_str(), moles->image->name);
+    // MLogger::GetLogger().info("moles->image->codeGenModule->moduleName: %s", moles->image->codeGenModule->moduleName);
+    // MLogger::GetLogger().info("moles->image->codeGenModule->invokerIndices[1]: %i", moles->image->codeGenModule->invokerIndices[1]);
+    // MLogger::GetLogger().info("s_GlobalMetadataPtr %p", il2cpp_functions::s_GlobalMetadataHeader);
+
+    // const void *s_GlobalMetadata = il2cpp_functions::s_GlobalMetadata;
+    // const Il2CppGlobalMetadataHeader *s_GlobalMetadataHeader = il2cpp_functions::s_GlobalMetadataHeader;
+
+    // MethodIndex start = moles->typeDefinition->methodStart;
+    // MethodIndex end = start + moles->method_count;
+    // for (MethodIndex index = start; index < end; ++index) {
+    //     auto *method = MetadataOffset<const Il2CppMethodDefinition *>(s_GlobalMetadata, s_GlobalMetadataHeader->methodsOffset, index);
+    //     auto *name = MetadataOffset<const char *>(s_GlobalMetadata, s_GlobalMetadataHeader->stringOffset, method->nameIndex);
+    //     uint32_t rid = method->token & 0x00FFFFFF;
+    //     MLogger::GetLogger().info("%s RID is %i", name, rid);
+    //     int32_t invokerIndex = moles->image->codeGenModule->invokerIndices[rid - 1];
+    //     MLogger::GetLogger().info("invokerIndex %i", invokerIndex);
+    // }
+
+    // for (int i = 0; i < s_GlobalMetadataHeader->methodsCount / sizeof(Il2CppMethodDefinition); i++) {
+    //     auto *method = MetadataOffset<const Il2CppMethodDefinition *>(s_GlobalMetadata, s_GlobalMetadataHeader->methodsOffset, i);
+    //     auto *name = MetadataOffset<const char *>(s_GlobalMetadata, s_GlobalMetadataHeader->stringOffset, method->nameIndex);
+    //     if (std::string("getMoleCount") == name) {
+    //         MLogger::GetLogger().info("getMoleCount RID is %i", method->token & 0x00FFFFFF);
+    //     }
+    // }
+    // Il2CppClass *moles = il2cpp_utils::GetClassFromName("", "Moles");
+    // const MethodInfo *molesPerDrive = il2cpp_utils::FindMethod(moles, "molesPerDrive", csTypeOf(Array<int>*));
+    // Array<int> *arr = il2cpp_utils::RunMethodThrow<Array<int> *, false>(moles, molesPerDrive, 10);
+    // MLogger::GetLogger().info("Moles.molesPerDrive returned length %i", arr->Length());
+
+    // int molesCount = il2cpp_utils::RunMethodThrow<int>(moles, getMoleCount);
+    // int molesCount = CRASH_UNLESS(il2cpp_utils::RunMethod<int>("", "Moles", "getMoleCount"));
+}

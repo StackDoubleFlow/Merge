@@ -20,6 +20,15 @@ MAKE_HOOK(MetadataLoader_LoadMetadataFile, nullptr, void *, const char *fileName
 
 std::vector<RawMod> ModLoader::rawMods;
 
+MetadataBuilder ModLoader::metadataBuilder;
+std::vector<Il2CppType *> ModLoader::addedTypes;
+std::vector<InvokerMethod> ModLoader::addedInvokers;
+std::unordered_map<ImageIndex, CodeGenModuleBuilder> ModLoader::addedCodeGenModules;
+
+const Il2CppMetadataRegistration *ModLoader::g_MetadataRegistration;
+const Il2CppCodeRegistration *ModLoader::g_CodeRegistration;
+const Il2CppCodeGenOptions *ModLoader::s_Il2CppCodeGenOptions;
+
 void ModLoader::Initialize() {
     Logger &logger = MLogger::GetLogger();
     logger.info("Initializing ModLoader");
@@ -52,7 +61,7 @@ void ModLoader::Initialize() {
     rawMods = ModReader::ReadAllMods();
     void *baseMetadata = ModReader::ReadBaseMetadata();
     MLogger::GetLogger().debug("ModLoader::Initialize with baseMetadata at %p", baseMetadata);
-    metadataBuilder = MetadataBuilder(baseMetadata);
+    metadataBuilder.Initialize(baseMetadata);
 
     for (auto &rawMod : rawMods) {
         metadataBuilder.AppendMetadata(rawMod.metadata, rawMod.modInfo.assemblyName, rawMod.runtimeMetadataTypeOffset);
