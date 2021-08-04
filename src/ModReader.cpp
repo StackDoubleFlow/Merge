@@ -16,8 +16,9 @@ std::string_view ModReader::GetModsDirectory() {
 }
 
 void *ModReader::ReadBaseMetadata() {
-    fs::path path = Modloader::getModloaderPath();
-    path = path / "../..assets/bin/Data/Managed/Metadata/global-metadata.dat";
+    fs::path path = "/sdcard/Android/data";
+    path = path / Modloader::getApplicationId();
+    path = path / "files/il2cpp/Metadata/global-metadata.dat";
     return ReadFile(path);
 }
 
