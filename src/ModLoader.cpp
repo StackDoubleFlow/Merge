@@ -60,7 +60,7 @@ void ModLoader::Initialize() {
     g_CodeRegistration = reinterpret_cast<Il2CppCodeRegistration *>(ExtractAddress(s_Il2CppCodegenRegistration.addr, 2, 1));
     s_Il2CppCodeGenOptions = reinterpret_cast<Il2CppCodeGenOptions *>(ExtractAddress(s_Il2CppCodegenRegistration.addr, 3, 1));
 
-    // rawMods = ModReader::ReadAllMods();
+    rawMods = ModReader::ReadAllMods();
     void *baseMetadata = ModReader::ReadBaseMetadata();
     MLogger::GetLogger().debug("ModLoader::Initialize with baseMetadata at %p", baseMetadata);
     metadataBuilder.Initialize(baseMetadata);

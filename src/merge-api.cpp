@@ -107,8 +107,6 @@ TypeDefinitionIndex CreateTypes(ImageIndex image,
     TypeDefinitionIndex startIdx = builder.typeDefinitions.size();
     for (auto &type : types) {
         TypeDefinitionIndex idx = builder.typeDefinitions.size();
-        logger.debug("Creating type %s.%s", type.namespaze.c_str(),
-                     type.name.c_str());
 
         Il2CppTypeDefinition typeDef;
         typeDef.nameIndex = builder.AppendString(type.name.c_str());
@@ -144,24 +142,40 @@ TypeDefinitionIndex CreateTypes(ImageIndex image,
         if (type.typeEnum == IL2CPP_TYPE_ENUM)
             typeDef.bitfield |= 2;
 
+        const Il2CppTypeDefinition &parentDef =
+            builder.typeDefinitions[GetInheritingDefinition(type.parent)];
+
         typeDef.interfacesStart = builder.interfaces.size();
-        typeDef.interfaces_count = type.interfaces.size();
+        // Copy interfaces of parent
+        builder.interfaces.insert(
+            builder.interfaces.end(),
+            builder.interfaces.begin() + parentDef.interfacesStart,
+            builder.interfaces.begin() + parentDef.interfacesStart +
+                parentDef.interfaces_count);
+        // Add new interfaces
         builder.interfaces.insert(builder.interfaces.end(),
                                   type.interfaces.begin(),
                                   type.interfaces.end());
+        typeDef.interfaces_count =
+            builder.interfaceOffsets.size() - typeDef.interfacesStart;
 
         typeDef.interfaceOffsetsStart = builder.interfaceOffsets.size();
-        typeDef.interface_offsets_count = type.interfaces.size();
+        typeDef.interface_offsets_count = typeDef.interfaces_count;
+        // Copy interface offsets of parent
+        builder.interfaceOffsets.insert(
+            builder.interfaceOffsets.end(),
+            builder.interfaceOffsets.begin() + parentDef.interfaceOffsetsStart,
+            builder.interfaceOffsets.begin() + parentDef.interfaceOffsetsStart +
+                parentDef.interface_offsets_count);
 
         typeDef.vtableStart = builder.vtableMethods.size();
-
-        const Il2CppTypeDefinition &parentDef =
-            builder.typeDefinitions[GetInheritingDefinition(type.parent)];
+        // Copy vtable of parent
         builder.vtableMethods.insert(
             builder.vtableMethods.end(),
             builder.vtableMethods.begin() + parentDef.vtableStart,
             builder.vtableMethods.begin() + parentDef.vtableStart +
                 parentDef.vtable_count);
+
         for (TypeIndex interfaceidx : type.interfaces) {
             uint16_t slot = builder.vtableMethods.size() - typeDef.vtableStart;
             Il2CppInterfaceOffsetPair offsetPair{interfaceidx, slot};
@@ -181,6 +195,10 @@ TypeDefinitionIndex CreateTypes(ImageIndex image,
         typeDef.vtable_count =
             builder.vtableMethods.size() - typeDef.vtableStart;
 
+        logger.debug(
+            "Adding type %s.%s, interfaces count: %hi, vtable size: %hi",
+            type.namespaze.c_str(), type.name.c_str(), typeDef.interfaces_count,
+            typeDef.vtable_count);
         builder.typeDefinitions.push_back(typeDef);
     }
 
@@ -192,6 +210,7 @@ TypeDefinitionIndex CreateTypes(ImageIndex image,
 
 MethodIndex CreateMethods(ImageIndex image, TypeDefinitionIndex type,
                           std::span<MergeMethodDefinition> methods) {
+    auto logger = MLogger::GetLogger().WithContext("Merge::API::CreateMethods");
     MetadataBuilder &builder = ModLoader::metadataBuilder;
     CodeGenModuleBuilder &moduleBuilder =
         ModLoader::addedCodeGenModules.at(image);
@@ -223,6 +242,7 @@ MethodIndex CreateMethods(ImageIndex image, TypeDefinitionIndex type,
         builder.methods.push_back(methodDef);
         int32_t invokerIdx = ModLoader::GetInvokersCount();
         ModLoader::addedInvokers.push_back(method.invoker);
+        logger.debug("Adding method %s, RID: %i", method.name, rid);
         moduleBuilder.AppendMethod(method.methodPointer, invokerIdx);
     }
 
@@ -277,21 +297,24 @@ void SetMethodOverrides(TypeDefinitionIndex typeIdx,
     Il2CppTypeDefinition &type = builder.typeDefinitions[typeIdx];
     for (auto &[oMethodIdx, vMethodIdx] : overrides) {
         auto &vMethod = builder.methods[vMethodIdx];
+        // Check if vMethod exists in vtable interfaces offsets
         int interfaceOffset = -1;
         for (uint16_t i = 0; i < type.interfaces_count; i++) {
-            TypeIndex iTypeIdx = builder.interfaces[type.interfacesStart + i];
+            auto &offsetPair =
+                builder.interfaceOffsets[type.interfaceOffsetsStart + i];
+            TypeIndex iTypeIdx = offsetPair.interfaceTypeIndex;
             if (GetInheritingDefinition(iTypeIdx) == vMethod.declaringType) {
-                auto &offsetPair =
-                    builder.interfaceOffsets[type.interfaceOffsetsStart + i];
                 interfaceOffset = offsetPair.offset;
             }
         }
+        // TODO: Check in parents
         if (interfaceOffset == -1) {
             logger.error("Could not find method idx %i in interfaces",
                          vMethodIdx);
         }
-        VTableIndex vtableIdx =
-            type.vtableStart + interfaceOffset + vMethod.slot;
+        uint16_t slot = interfaceOffset + vMethod.slot;
+        builder.methods[oMethodIdx].slot = slot;
+        VTableIndex vtableIdx = type.vtableStart + slot;
         EncodedMethodIndex encodedIdx = oMethodIdx;
         encodedIdx |= (kIl2CppMetadataUsageMethodDef << 29);
         builder.vtableMethods[vtableIdx] = encodedIdx;

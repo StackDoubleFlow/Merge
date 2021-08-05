@@ -5,7 +5,7 @@
 #include "merge-api.h"
 #include "beatsaber-hook/shared/utils/utils.h"
 
-void Dispose(Il2CppObject *self, MethodInfo *idk) {
+void PoggersDispose(Il2CppObject *self, MethodInfo *idk) {
     MLogger::GetLogger().info("SJDFHDSJGHSJKHGF IT WAS CALLED");
 }
 
@@ -40,7 +40,7 @@ extern "C" void setup(ModInfo &info) {
     Merge::API::MergeMethodDefinition disposeMethod;
     disposeMethod.name = "Dispose";
     disposeMethod.returnType = Merge::API::GetTypeDefinition(voidIdx).byvalTypeIndex;
-    disposeMethod.methodPointer = (void(*)()) Dispose;
+    disposeMethod.methodPointer = (void(*)()) PoggersDispose;
     std::vector<Merge::API::MergeMethodDefinition> methods = {disposeMethod};
     MethodIndex poggersDispose = Merge::API::CreateMethods(image, poggersIdx, std::span(methods));
 
