@@ -144,7 +144,6 @@ MethodIndex CreateMethods(ImageIndex image, TypeDefinitionIndex type,
         // used.
         methodDef.token = rid;
         methodDef.flags = method.flags;
-        // TODO: vtable
         methodDef.slot = -1;
         methodDef.parameterCount = method.parameters.size();
         builder.methods.push_back(methodDef);

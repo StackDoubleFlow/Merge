@@ -23,7 +23,7 @@ struct MergePropertyDefinition {
 struct MergeMethodDefinition {
     char *name;
     MergeParameterDefinition *parameters;
-    size_t parametersCount;
+    int32_t parametersCount;
     TypeIndex returnType;
     Il2CppMethodPointer methodPointer;
     InvokerMethod invoker;
@@ -52,16 +52,16 @@ ImageIndex merge_create_image(char *name);
 AssemblyIndex merge_create_assembly(ImageIndex image, char *name);
 TypeDefinitionIndex merge_create_types(ImageIndex image,
                                        MergeTypeDefinition *types,
-                                       size_t types_count);
+                                       int32_t typesCount);
 MethodIndex merge_create_methods(ImageIndex image, TypeDefinitionIndex type,
                                  MergeMethodDefinition *methods,
-                                 size_t methods_count);
+                                 int32_t methodsCount);
 FieldIndex merge_create_fields(TypeDefinitionIndex type,
                                MergeFieldDefinition *fields,
-                               size_t fields_count);
+                               int32_t fieldsCount);
 PropertyIndex merge_create_properties(TypeDefinitionIndex type,
                                       MergePropertyDefinition *properties,
-                                      size_t properties_count);
+                                      int32_t propertiesCount);
 void merge_set_method_declaring_type(MethodIndex method, TypeIndex type);
 
 #if defined(__cplusplus)
