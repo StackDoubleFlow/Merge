@@ -91,6 +91,7 @@ void MetadataBuilder::AppendMetadata(const void *metadata, std::string_view asse
             Il2CppTypeDefinition type = *MetadataOffset<const Il2CppTypeDefinition *>(metadata, header->typeDefinitionsOffset, i + image.typeStart);
             const char *name = MetadataOffset<const char *>(metadata, header->stringOffset, type.nameIndex);
             const char *namespaze = MetadataOffset<const char *>(metadata, header->stringOffset, type.namespaceIndex);
+            typeNameMap[std::make_pair(namespaze, name)] = typeDefinitions.size();
             logger.debug("Adding type %s.%s", namespaze, name);
             type.nameIndex = AppendString(name);
             type.namespaceIndex = AppendString(namespaze);
@@ -101,6 +102,7 @@ void MetadataBuilder::AppendMetadata(const void *metadata, std::string_view asse
                 const char *name = MetadataOffset<const char *>(metadata, header->stringOffset, method.nameIndex);
                 logger.debug("Adding method %s, RID: %i", name, method.token & 0x00FFFFFF);
                 method.nameIndex = AppendString(name);
+                method.declaringType += typeOffset;
                 method.returnType += typeOffset;
                 ParameterIndex parameterStart = parameters.size();
                 for (size_t i = 0; i < method.parameterCount; i++) {
@@ -230,4 +232,12 @@ void *MetadataBuilder::Finish() {
     MLogger::GetLogger().debug("Built new metadata at %p with size %i", metadata, i);
 
     return metadata;
+}
+
+std::optional<TypeDefinitionIndex> MetadataBuilder::FindTypeDefinition(const char *namespaze, const char *name) {
+    auto itr = typeNameMap.find(std::make_pair(namespaze, name));
+    if (itr != typeNameMap.end()) {
+        return itr->second;
+    }
+    return std::nullopt;
 }

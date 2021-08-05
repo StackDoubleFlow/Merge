@@ -6,7 +6,9 @@ namespace Merge::API {
 void Initialize() { ModLoader::Initialize(); }
 
 std::optional<Il2CppTypeDefinition>
-GetTypeDefinition(std::string_view namespaze, std::string_view name) {}
+FindTypeDefinition(std::string_view namespaze, std::string_view name) {
+    ModLoader::metadataBuilder.FindTypeDefinition(namespaze.data(), name.data());
+}
 
 TypeIndex CreateSZArrayType(TypeIndex elementType) {}
 

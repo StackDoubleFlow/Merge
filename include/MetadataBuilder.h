@@ -2,19 +2,36 @@
 #include "il2cpp-metadata.h"
 #include "il2cpp-runtime-metadata.h"
 #include <string_view>
-#include <vector>
 #include <unordered_map>
+#include <vector>
+
+struct PairHash {
+    template <class T1, class T2>
+    std::size_t operator()(const std::pair<T1, T2> &p) const {
+        auto h1 = std::hash<T1>{}(p.first);
+        auto h2 = std::hash<T2>{}(p.second);
+
+        // Same hash seed il2cpp uses, idk if it's any good
+        return h1 * 486187739 + h2;
+    }
+};
 
 class MetadataBuilder {
 public:
     void Initialize(const void *baseMetadata);
-    void AppendMetadata(const void *metadata, std::string_view assemblyName, int typeOffset);
+    void AppendMetadata(const void *metadata, std::string_view assemblyName,
+                        int typeOffset);
     StringIndex AppendString(const char *str);
+    std::optional<TypeDefinitionIndex>
+    FindTypeDefinition(const char *namespaze, const char *name);
     void *Finish();
 
 private:
-    TypeDefinitionIndex RedirectTypeDefinition(std::unordered_map<TypeDefinitionIndex, TypeDefinitionIndex> &typeRedirects,
-                                               TypeDefinitionIndex modType, ImageIndex imageIndex, const void *metadata);
+    TypeDefinitionIndex RedirectTypeDefinition(
+        std::unordered_map<TypeDefinitionIndex, TypeDefinitionIndex>
+            &typeRedirects,
+        TypeDefinitionIndex modType, ImageIndex imageIndex,
+        const void *metadata);
 
 public:
     std::vector<Il2CppStringLiteral> stringLiteral;
@@ -49,4 +66,9 @@ public:
     std::vector<Il2CppRange> unresolvedVirtualCallParameterRanges;
     std::vector<Il2CppWindowsRuntimeTypeNamePair> windowsRuntimeTypeNames;
     std::vector<TypeDefinitionIndex> exportedTypeDefinitions;
+
+private:
+    std::unordered_map<std::pair<std::string, std::string>, TypeDefinitionIndex,
+                       PairHash>
+        typeNameMap;
 };

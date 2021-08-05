@@ -56,7 +56,7 @@ void Initialize();
  * @return A copy of the type definition of it was found, otherwise nullopt
  */
 std::optional<Il2CppTypeDefinition>
-GetTypeDefinition(std::string_view namespaze, std::string_view name);
+FindTypeDefinition(std::string_view namespaze, std::string_view name);
 
 /**
  * Creates a zero indexed, single dimentional array type from a given element
