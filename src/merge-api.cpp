@@ -349,6 +349,11 @@ void SetMethodOverrides(TypeDefinitionIndex typeIdx,
             SAFE_ABORT();
         }
         auto &vMethod = builder.methods[vMethodIdx];
+        if (vMethod.slot == -1) {
+            logger.error("Tried to override non-virtual method %i",
+                         vMethodIdx);
+            SAFE_ABORT();
+        }
         // Check if vMethod exists in vtable interfaces offsets
         int interfaceOffset = -1;
         for (uint16_t i = 0; i < type.interfaces_count; i++) {
