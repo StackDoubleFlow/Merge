@@ -264,6 +264,13 @@ MethodIndex CreateMethods(ImageIndex image, TypeDefinitionIndex type,
         ModLoader::addedInvokers.push_back(method.invoker);
         logger.debug("Adding method %s, RID: %i", method.name.c_str(), rid);
         moduleBuilder.AppendMethod(method.methodPointer, invokerIdx);
+
+        Il2CppTypeDefinition &typeDef = builder.typeDefinitions[type];
+        if (method.name == "Finalize") {
+            typeDef.bitfield |= (1 << 2);
+        } else if (method.name == ".cctor") {
+            typeDef.bitfield |= (1 << 3);
+        }
     }
 
     return startIdx;
