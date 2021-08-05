@@ -1,4 +1,4 @@
-#include "api.h"
+#include "merge-api.h"
 #include "ModLoader.h"
 
 namespace Merge::API {
@@ -14,8 +14,8 @@ TypeIndex CreatePointerType(TypeIndex type) {}
 
 ImageIndex CreateImage(std::string_view name) {
     MetadataBuilder &builder = ModLoader::metadataBuilder;
-    char *cname;
-    strcpy(cname, std::string(name).c_str());
+    char *cname = new char[name.size() + 1];
+    strcpy(cname, name.data());
 
     Il2CppImageDefinition image;
     image.nameIndex = builder.AppendString(cname);

@@ -2,10 +2,10 @@
 #include "Logger.h"
 #include "beatsaber-hook/shared/config/config-utils.hpp"
 
-#include <fstream>
-#include <sys/stat.h>
-#include <sys/mman.h> 
 #include <fcntl.h>
+#include <fstream>
+#include <sys/mman.h>
+#include <sys/stat.h>
 
 namespace fs = std::filesystem;
 
@@ -41,7 +41,6 @@ void *ModReader::ReadFile(std::filesystem::path path) {
 }
 
 MModInfo ModReader::ReadModInfo(std::filesystem::path path) {
-    
     std::ifstream file(path);
     if (file.is_open()) {
         std::string str((std::istreambuf_iterator<char>(file)),
@@ -77,7 +76,8 @@ std::vector<RawMod> ModReader::ReadAllMods() {
         fs::path path = entry.path();
         MModInfo modInfo = ReadModInfo(path / "mergeMod.json");
         void *metadata = ReadFile(path / modInfo.metadataFilename);
-        fs::path codeDestPath = fs::path(Modloader::getDestinationPath()) / modInfo.codeFilename;
+        fs::path codeDestPath =
+            fs::path(Modloader::getDestinationPath()) / modInfo.codeFilename;
         fs::copy_file(path / modInfo.codeFilename, codeDestPath);
         void *codeHandle = dlopen((codeDestPath).c_str(), RTLD_LAZY);
         mods.push_back({modInfo, metadata, codeHandle});
