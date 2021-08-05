@@ -52,6 +52,13 @@ void MetadataBuilder::Initialize(const void *baseMetadata) {
     APPEND_BASE(unresolvedVirtualCallParameterRanges)
     APPEND_BASE_FUCKED(windowsRuntimeTypeNames, windowsRuntimeTypeNamesSize)
     APPEND_BASE(exportedTypeDefinitions)
+
+    for (size_t i = 0; i < typeDefinitions.size(); i++) {
+        Il2CppTypeDefinition &type = typeDefinitions[i];
+        const char *name = MetadataOffset<const char *>(baseMetadata, header->stringOffset, type.nameIndex);
+        const char *namespaze = MetadataOffset<const char *>(baseMetadata, header->stringOffset, type.namespaceIndex);
+        typeNameMap[std::make_pair(namespaze, name)] = i;
+    }
 }
 
 void MetadataBuilder::AppendMetadata(const void *metadata, std::string_view assemblyName, int typeOffset) {
@@ -92,7 +99,7 @@ void MetadataBuilder::AppendMetadata(const void *metadata, std::string_view asse
             const char *name = MetadataOffset<const char *>(metadata, header->stringOffset, type.nameIndex);
             const char *namespaze = MetadataOffset<const char *>(metadata, header->stringOffset, type.namespaceIndex);
             typeNameMap[std::make_pair(namespaze, name)] = typeDefinitions.size();
-            logger.debug("Adding type %s.%s", namespaze, name);
+            logger.debug("Adding type %s.%s, interfaces count: %hi, vtable size: %hi", namespaze, name, type.interfaces_count, type.vtable_count);
             type.nameIndex = AppendString(name);
             type.namespaceIndex = AppendString(namespaze);
 
@@ -239,5 +246,9 @@ std::optional<TypeDefinitionIndex> MetadataBuilder::FindTypeDefinition(const cha
     if (itr != typeNameMap.end()) {
         return itr->second;
     }
+    // for (auto &[pair, idx] : typeNameMap) {
+    //     auto &[namespaze, name] = pair;
+    //     MLogger::GetLogger().info("%s.%s", namespaze.c_str(), name.c_str());
+    // }
     return std::nullopt;
 }

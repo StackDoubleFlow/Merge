@@ -6,6 +6,7 @@
 #include <span>
 #include <string>
 #include <vector>
+#include <unordered_map>
 
 namespace Merge::API {
 
@@ -43,6 +44,7 @@ struct MergeTypeDefinition {
     uint16_t attrs;
     Il2CppTypeEnum typeEnum;
     bool valueType;
+    std::vector<TypeIndex> interfaces;
 };
 
 /// Initialize Merge and its API. Call this before anything else.
@@ -53,10 +55,38 @@ void Initialize();
  *
  * @param namespaze The namespace of the type.
  * @param name The name of the type.
- * @return A copy of the type definition of it was found, otherwise nullopt
+ * @return The index of the type definition of it was found, otherwise nullopt
  */
-std::optional<Il2CppTypeDefinition>
-FindTypeDefinition(std::string_view namespaze, std::string_view name);
+std::optional<TypeDefinitionIndex>
+FindTypeDefinitionIndex(std::string_view namespaze, std::string_view name);
+
+/**
+ * Gets an existing type definition from the metadata at the specified index.
+ *
+ * @param idx The index of the type definition.
+ * @return A copy of the type definition.
+ */
+Il2CppTypeDefinition GetTypeDefinition(TypeDefinitionIndex idx);
+
+/**
+ * Finds an existing method definition in the metadata.
+ *
+ * @param type The type to look in.
+ * @param name The name of the method.
+ * @param paramCount The number of parameters the method has.
+ * @return The index of the method definition of it was found, otherwise nullopt
+ */
+std::optional<MethodIndex>
+FindMethodDefinitionIndex(TypeDefinitionIndex typeIdx, std::string_view name,
+                          uint16_t paramCount);
+
+/**
+ * Gets an existing method definition from the metadata at the specified index.
+ *
+ * @param idx The index of the method definition.
+ * @return A copy of the method definition.
+ */
+Il2CppMethodDefinition GetMethodDefinition(MethodIndex idx);
 
 /**
  * Creates a zero indexed, single dimentional array type from a given element
@@ -76,23 +106,23 @@ TypeIndex CreateSZArrayType(TypeIndex elementType);
 TypeIndex CreatePointerType(TypeIndex type);
 
 /**
- * Creates an image and adds it to the metadata.
+ * Creates an assembly and adds it to the metadata.
  *
- * You must link an assembly to this image with `CreateAssembly`
+ * You must link an image to this assembly with `CreateImage`
  *
- * @param name The name if the image to create.
- * @return Index of the image created.
- */
-ImageIndex CreateImage(std::string_view name);
-
-/**
- * Creates an assembly and links it to the image.
- *
- * @param image The image to link to.
  * @param name The name if the assembly to create.
  * @return Index of the assembly created.
  */
-AssemblyIndex CreateAssembly(ImageIndex image, std::string_view name);
+AssemblyIndex CreateAssembly(std::string_view name);
+
+/**
+ * Creates an image and links it to the assembly.
+ *
+ * @param assembly The assembly to link to.
+ * @param name The name of the image to create.
+ * @return Index of the image created.
+ */
+ImageIndex CreateImage(AssemblyIndex assembly, std::string_view name);
 
 /**
  * Creates type definitions in the assembly.
@@ -133,7 +163,7 @@ FieldIndex CreateFields(TypeDefinitionIndex type,
  * @return Index of the first property created.
  */
 PropertyIndex CreateProperties(TypeDefinitionIndex type,
-                            std::span<MergePropertyDefinition> properties);
+                               std::span<MergePropertyDefinition> properties);
 
 /**
  * Sets the declaring type of a method.
@@ -142,5 +172,19 @@ PropertyIndex CreateProperties(TypeDefinitionIndex type,
  * @param type The type to set the declaying type to.
  */
 void SetMethodDeclaringType(MethodIndex method, TypeIndex type);
+
+using OverridesMap = std::unordered_map<MethodIndex, MethodIndex>;
+
+/**
+ * Overrides virtual methods of the parent type and implementing interfaces.
+ * 
+ * This will populate `type`'s vtable;
+ *
+ * @param type The type doing the overriding.
+ * @param overrides Mapping of the methods in `type` to the methods you want to
+ * override
+ */
+void SetMethodOverrides(TypeDefinitionIndex type,
+                        const OverridesMap &overrides);
 
 } // end namespace Merge::API

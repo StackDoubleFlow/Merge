@@ -19,6 +19,7 @@ MAKE_HOOK(MetadataLoader_LoadMetadataFile, nullptr, void *, const char *fileName
 }
 
 std::vector<RawMod> ModLoader::rawMods;
+bool ModLoader::initialized;
 
 MetadataBuilder ModLoader::metadataBuilder;
 std::vector<Il2CppType *> ModLoader::addedTypes;
@@ -30,6 +31,7 @@ const Il2CppCodeRegistration *ModLoader::g_CodeRegistration;
 const Il2CppCodeGenOptions *ModLoader::s_Il2CppCodeGenOptions;
 
 void ModLoader::Initialize() {
+    if (initialized) return;
     Logger &logger = MLogger::GetLogger();
     logger.info("Initializing ModLoader");
 
@@ -58,7 +60,7 @@ void ModLoader::Initialize() {
     g_CodeRegistration = reinterpret_cast<Il2CppCodeRegistration *>(ExtractAddress(s_Il2CppCodegenRegistration.addr, 2, 1));
     s_Il2CppCodeGenOptions = reinterpret_cast<Il2CppCodeGenOptions *>(ExtractAddress(s_Il2CppCodegenRegistration.addr, 3, 1));
 
-    rawMods = ModReader::ReadAllMods();
+    // rawMods = ModReader::ReadAllMods();
     void *baseMetadata = ModReader::ReadBaseMetadata();
     MLogger::GetLogger().debug("ModLoader::Initialize with baseMetadata at %p", baseMetadata);
     metadataBuilder.Initialize(baseMetadata);
@@ -66,6 +68,8 @@ void ModLoader::Initialize() {
     for (auto &rawMod : rawMods) {
         metadataBuilder.AppendMetadata(rawMod.metadata, rawMod.modInfo.assemblyName, rawMod.runtimeMetadataTypeOffset);
     }
+
+    initialized = true;
 }
 
 void *ModLoader::CreateNewMetadata() {
@@ -78,6 +82,16 @@ int ModLoader::GetTypesCount() {
 
 int ModLoader::GetInvokersCount() {
     return g_CodeRegistration->invokerPointersCount + addedInvokers.size();
+}
+
+const Il2CppType *ModLoader::GetType(TypeIndex idx) {
+    if (idx < g_MetadataRegistration->typesCount) {
+        return g_MetadataRegistration->types[idx];
+    } else if (idx - g_MetadataRegistration->typesCount < addedTypes.size()) {
+        return addedTypes[idx - g_MetadataRegistration->typesCount];
+    } else {
+        return nullptr;
+    }
 }
 
 void ModLoader::FixupCodeRegistration(Il2CppCodeRegistration *&codeRegistration, Il2CppMetadataRegistration *&metadataRegistration, Il2CppCodeGenOptions *&codeGenOptions) {

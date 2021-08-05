@@ -1,31 +1,71 @@
 #include "merge-api.h"
+#include "Logger.h"
 #include "ModLoader.h"
+#include "beatsaber-hook/shared/utils/utils.h"
 
 namespace Merge::API {
 
 void Initialize() { ModLoader::Initialize(); }
 
-std::optional<Il2CppTypeDefinition>
-FindTypeDefinition(std::string_view namespaze, std::string_view name) {
-    auto idx = ModLoader::metadataBuilder.FindTypeDefinition(namespaze.data(),
-                                                             name.data());
-    if (!idx)
-        return std::nullopt;
-    return ModLoader::metadataBuilder.typeDefinitions[*idx];
+std::optional<TypeDefinitionIndex>
+FindTypeDefinitionIndex(std::string_view namespaze, std::string_view name) {
+    return ModLoader::metadataBuilder.FindTypeDefinition(namespaze.data(),
+                                                         name.data());
+}
+
+Il2CppTypeDefinition GetTypeDefinition(TypeDefinitionIndex idx) {
+    return ModLoader::metadataBuilder.typeDefinitions[idx];
+}
+
+std::optional<MethodIndex>
+FindMethodDefinitionIndex(TypeDefinitionIndex typeIdx, std::string_view name,
+                          uint16_t paramCount) {
+    MetadataBuilder &builder = ModLoader::metadataBuilder;
+
+    Il2CppTypeDefinition &type = builder.typeDefinitions[typeIdx];
+    for (size_t i = 0; i < type.method_count; i++) {
+        Il2CppMethodDefinition &method = builder.methods[type.methodStart + i];
+        if (name == &builder.string[method.nameIndex] &&
+            method.parameterCount == paramCount) {
+            return type.methodStart + i;
+        }
+    }
+
+    return std::nullopt;
+}
+
+Il2CppMethodDefinition GetMethodDefinition(MethodIndex idx) {
+    return ModLoader::metadataBuilder.methods[idx];
 }
 
 TypeIndex CreateSZArrayType(TypeIndex elementType) {}
 
 TypeIndex CreatePointerType(TypeIndex type) {}
 
-ImageIndex CreateImage(std::string_view name) {
+AssemblyIndex CreateAssembly(std::string_view name) {
+    MetadataBuilder &builder = ModLoader::metadataBuilder;
+
+    Il2CppAssemblyDefinition assembly;
+    assembly.aname.nameIndex = builder.AppendString(name.data());
+    assembly.imageIndex = -1;
+    assembly.referencedAssemblyStart = -1;
+    assembly.referencedAssemblyCount = 0;
+    // TODO: token
+    assembly.token = 0;
+
+    AssemblyIndex idx = builder.assemblies.size();
+    builder.assemblies.push_back(assembly);
+    return idx;
+}
+
+ImageIndex CreateImage(AssemblyIndex assemblyIdx, std::string_view name) {
     MetadataBuilder &builder = ModLoader::metadataBuilder;
     char *cname = new char[name.size() + 1];
     strcpy(cname, name.data());
 
     Il2CppImageDefinition image;
     image.nameIndex = builder.AppendString(cname);
-    image.assemblyIndex = -1;
+    image.assemblyIndex = assemblyIdx;
     image.typeStart = -1;
     image.typeCount = 0;
     image.exportedTypeStart = -1;
@@ -39,34 +79,36 @@ ImageIndex CreateImage(std::string_view name) {
     ImageIndex idx = builder.images.size();
     builder.images.push_back(image);
 
+    builder.assemblies[assemblyIdx].imageIndex = idx;
+
     ModLoader::addedCodeGenModules.emplace(idx, cname);
 
     return idx;
 }
 
-AssemblyIndex CreateAssembly(ImageIndex image, std::string_view name) {
-    MetadataBuilder &builder = ModLoader::metadataBuilder;
+namespace {
 
-    Il2CppAssemblyDefinition assembly;
-    assembly.aname.nameIndex = builder.AppendString(name.data());
-    assembly.imageIndex = image;
-    assembly.referencedAssemblyStart = -1;
-    assembly.referencedAssemblyCount = 0;
-    // TODO: token
-    assembly.token = 0;
-
-    AssemblyIndex idx = builder.assemblies.size();
-    builder.assemblies.push_back(assembly);
-    return idx;
+TypeDefinitionIndex GetInheritingDefinition(TypeIndex idx) {
+    const Il2CppType *type = ModLoader::GetType(idx);
+    if (type->type == IL2CPP_TYPE_GENERICINST) {
+        return type->data.generic_class->typeDefinitionIndex;
+    } else {
+        return type->data.klassIndex;
+    }
 }
+
+} // namespace
 
 TypeDefinitionIndex CreateTypes(ImageIndex image,
                                 std::span<MergeTypeDefinition> types) {
+    auto logger = MLogger::GetLogger().WithContext("Merge::API::CreateTypes");
     MetadataBuilder &builder = ModLoader::metadataBuilder;
 
     TypeDefinitionIndex startIdx = builder.typeDefinitions.size();
     for (auto &type : types) {
         TypeDefinitionIndex idx = builder.typeDefinitions.size();
+        logger.debug("Creating type %s.%s", type.namespaze.c_str(),
+                     type.name.c_str());
 
         Il2CppTypeDefinition typeDef;
         typeDef.nameIndex = builder.AppendString(type.name.c_str());
@@ -92,21 +134,52 @@ TypeDefinitionIndex CreateTypes(ImageIndex image,
         typeDef.eventStart = -1;
         typeDef.propertyStart = -1;
         typeDef.nestedTypesStart = -1;
-        typeDef.interfacesStart = -1;
-        typeDef.vtableStart = -1;
-        typeDef.interfaceOffsetsStart = -1;
         typeDef.method_count = 0;
         typeDef.property_count = 0;
         typeDef.field_count = 0;
         typeDef.event_count = 0;
         typeDef.nested_type_count = 0;
-        typeDef.vtable_count = 0;
-        typeDef.interfaces_count = 0;
-        typeDef.interface_offsets_count = 0;
         typeDef.bitfield = 0;
         typeDef.bitfield |= type.valueType & 1;
         if (type.typeEnum == IL2CPP_TYPE_ENUM)
             typeDef.bitfield |= 2;
+
+        typeDef.interfacesStart = builder.interfaces.size();
+        typeDef.interfaces_count = type.interfaces.size();
+        builder.interfaces.insert(builder.interfaces.end(),
+                                  type.interfaces.begin(),
+                                  type.interfaces.end());
+
+        typeDef.interfaceOffsetsStart = builder.interfaceOffsets.size();
+        typeDef.interface_offsets_count = type.interfaces.size();
+
+        typeDef.vtableStart = builder.vtableMethods.size();
+
+        const Il2CppTypeDefinition &parentDef =
+            builder.typeDefinitions[GetInheritingDefinition(type.parent)];
+        builder.vtableMethods.insert(
+            builder.vtableMethods.end(),
+            builder.vtableMethods.begin() + parentDef.vtableStart,
+            builder.vtableMethods.begin() + parentDef.vtableStart +
+                parentDef.vtable_count);
+        for (TypeIndex interfaceidx : type.interfaces) {
+            uint16_t slot = builder.vtableMethods.size() - typeDef.vtableStart;
+            Il2CppInterfaceOffsetPair offsetPair{interfaceidx, slot};
+            builder.interfaceOffsets.push_back(offsetPair);
+
+            const Il2CppTypeDefinition &interfaceDef =
+                builder.typeDefinitions[GetInheritingDefinition(interfaceidx)];
+            for (uint16_t i = 0; i < interfaceDef.method_count; i++) {
+                auto &method = builder.methods[interfaceDef.methodStart];
+                MLogger::GetLogger().debug(
+                    "Placing method with slot %i at slot %i", method.slot, i);
+                // vtable should be populated later with a call to
+                // SetMethodOverrides
+                builder.vtableMethods.push_back(-1);
+            }
+        }
+        typeDef.vtable_count =
+            builder.vtableMethods.size() - typeDef.vtableStart;
 
         builder.typeDefinitions.push_back(typeDef);
     }
@@ -120,7 +193,8 @@ TypeDefinitionIndex CreateTypes(ImageIndex image,
 MethodIndex CreateMethods(ImageIndex image, TypeDefinitionIndex type,
                           std::span<MergeMethodDefinition> methods) {
     MetadataBuilder &builder = ModLoader::metadataBuilder;
-    CodeGenModuleBuilder &moduleBuilder = ModLoader::addedCodeGenModules[image];
+    CodeGenModuleBuilder &moduleBuilder =
+        ModLoader::addedCodeGenModules.at(image);
 
     MethodIndex startIdx = builder.methods.size();
     for (auto &method : methods) {
@@ -193,6 +267,35 @@ PropertyIndex CreateProperties(TypeDefinitionIndex type,
 
 void SetMethodDeclaringType(MethodIndex method, TypeIndex type) {
     ModLoader::metadataBuilder.methods[method].declaringType = type;
+}
+
+void SetMethodOverrides(TypeDefinitionIndex typeIdx,
+                        const OverridesMap &overrides) {
+    auto logger =
+        MLogger::GetLogger().WithContext("Merge::API::SetMethodOverrides");
+    MetadataBuilder &builder = ModLoader::metadataBuilder;
+    Il2CppTypeDefinition &type = builder.typeDefinitions[typeIdx];
+    for (auto &[oMethodIdx, vMethodIdx] : overrides) {
+        auto &vMethod = builder.methods[vMethodIdx];
+        int interfaceOffset = -1;
+        for (uint16_t i = 0; i < type.interfaces_count; i++) {
+            TypeIndex iTypeIdx = builder.interfaces[type.interfacesStart + i];
+            if (GetInheritingDefinition(iTypeIdx) == vMethod.declaringType) {
+                auto &offsetPair =
+                    builder.interfaceOffsets[type.interfaceOffsetsStart + i];
+                interfaceOffset = offsetPair.offset;
+            }
+        }
+        if (interfaceOffset == -1) {
+            logger.error("Could not find method idx %i in interfaces",
+                         vMethodIdx);
+        }
+        VTableIndex vtableIdx =
+            type.vtableStart + interfaceOffset + vMethod.slot;
+        EncodedMethodIndex encodedIdx = oMethodIdx;
+        encodedIdx |= (kIl2CppMetadataUsageMethodDef << 29);
+        builder.vtableMethods[vtableIdx] = encodedIdx;
+    }
 }
 
 } // end namespace Merge::API

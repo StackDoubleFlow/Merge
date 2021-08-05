@@ -14,11 +14,13 @@ public:
     FixupCodeRegistration(Il2CppCodeRegistration *&codeRegistration,
                           Il2CppMetadataRegistration *&metadataRegistration,
                           Il2CppCodeGenOptions *&codeGenOptions);
+    static const Il2CppType *GetType(TypeIndex idx);
     static int GetTypesCount();
     static int GetInvokersCount();
     static void *CreateNewMetadata();
 
 private:
+    static bool initialized;
     static std::vector<RawMod> rawMods;
 
 public:
