@@ -38,9 +38,29 @@ Il2CppMethodDefinition GetMethodDefinition(MethodIndex idx) {
     return ModLoader::metadataBuilder.methods[idx];
 }
 
-TypeIndex CreateSZArrayType(TypeIndex elementType) {}
+TypeIndex CreateSZArrayType(TypeIndex elementType) {
+    // TODO: Check to see if type already exists
+    TypeIndex typeIdx = ModLoader::GetTypesCount();
+    Il2CppType addedType;
+    addedType.data.type = ModLoader::GetType(elementType);
+    addedType.attrs = 0;
+    addedType.type = IL2CPP_TYPE_SZARRAY;
+    addedType.byref = false;
+    ModLoader::addedTypes.push_back(new Il2CppType(addedType));
+    return typeIdx;
+}
 
-TypeIndex CreatePointerType(TypeIndex type) {}
+TypeIndex CreatePointerType(TypeIndex type) {
+    // TODO: Check to see if type already exists
+    TypeIndex typeIdx = ModLoader::GetTypesCount();
+    Il2CppType addedType;
+    addedType.data.type = ModLoader::GetType(type);
+    addedType.attrs = 0;
+    addedType.type = IL2CPP_TYPE_PTR;
+    addedType.byref = false;
+    ModLoader::addedTypes.push_back(new Il2CppType(addedType));
+    return typeIdx;
+}
 
 AssemblyIndex CreateAssembly(std::string_view name) {
     MetadataBuilder &builder = ModLoader::metadataBuilder;
