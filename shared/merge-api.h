@@ -30,7 +30,7 @@ struct MergeMethodDefinition {
     std::string name;
     std::vector<MergeParameterDefinition> parameters;
     TypeIndex returnType;
-    Il2CppMethodPointer *methodPointer;
+    Il2CppMethodPointer methodPointer;
     InvokerMethod invoker;
     uint16_t flags;
     uint16_t iflags;
@@ -101,17 +101,18 @@ AssemblyIndex CreateAssembly(ImageIndex image, std::string_view name);
  * @param types Descriptions of the types to create.
  * @return Index of first type definition created.
  */
-TypeDefinitionIndex CreateTypes(AssemblyIndex assembly,
+TypeDefinitionIndex CreateTypes(ImageIndex image,
                                 std::span<MergeTypeDefinition> types);
 
 /**
  * Creates methods in a type.
  *
+ * @param image The image of the type.
  * @param type The type to create the methods in.
  * @param methods Descriptions of the methods to create.
  * @return Index of the first method created.
  */
-MethodIndex CreateMethods(TypeDefinitionIndex type,
+MethodIndex CreateMethods(ImageIndex image, TypeDefinitionIndex type,
                           std::span<MergeMethodDefinition> methods);
 
 /**

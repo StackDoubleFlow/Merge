@@ -9,6 +9,7 @@ class CodeGenModuleBuilder {
 public:
     CodeGenModuleBuilder(const char *moduleName);
     void AppendMethod(Il2CppMethodPointer methodPointer, int32_t invokerIdx);
+    int32_t GetNextMethodRID();
     Il2CppCodeGenModule *Finish();
 
 private:

@@ -25,7 +25,7 @@ struct MergeMethodDefinition {
     MergeParameterDefinition *parameters;
     size_t parametersCount;
     TypeIndex returnType;
-    Il2CppMethodPointer *methodPointer;
+    Il2CppMethodPointer methodPointer;
     InvokerMethod invoker;
     uint16_t flags;
     uint16_t iflags;
@@ -50,10 +50,10 @@ TypeIndex merge_create_sz_array_type(TypeIndex elementType);
 TypeIndex merge_create_pointer_type(TypeIndex type);
 ImageIndex merge_create_image(char *name);
 AssemblyIndex merge_create_assembly(ImageIndex image, char *name);
-TypeDefinitionIndex merge_create_types(AssemblyIndex assembly,
+TypeDefinitionIndex merge_create_types(ImageIndex image,
                                        MergeTypeDefinition *types,
                                        size_t types_count);
-MethodIndex merge_create_methods(TypeDefinitionIndex type,
+MethodIndex merge_create_methods(ImageIndex image, TypeDefinitionIndex type,
                                  MergeMethodDefinition *methods,
                                  size_t methods_count);
 FieldIndex merge_create_fields(TypeDefinitionIndex type,

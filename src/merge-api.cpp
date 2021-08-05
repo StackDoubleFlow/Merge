@@ -60,7 +60,7 @@ AssemblyIndex CreateAssembly(ImageIndex image, std::string_view name) {
     return idx;
 }
 
-TypeDefinitionIndex CreateTypes(AssemblyIndex assembly,
+TypeDefinitionIndex CreateTypes(ImageIndex image,
                                 std::span<MergeTypeDefinition> types) {
     MetadataBuilder &builder = ModLoader::metadataBuilder;
 
@@ -111,12 +111,16 @@ TypeDefinitionIndex CreateTypes(AssemblyIndex assembly,
         builder.typeDefinitions.push_back(typeDef);
     }
 
+    builder.images[image].typeStart = startIdx;
+    builder.images[image].typeCount = types.size();
+
     return startIdx;
 }
 
-MethodIndex CreateMethods(TypeDefinitionIndex type,
+MethodIndex CreateMethods(ImageIndex image, TypeDefinitionIndex type,
                           std::span<MergeMethodDefinition> methods) {
     MetadataBuilder &builder = ModLoader::metadataBuilder;
+    CodeGenModuleBuilder &moduleBuilder = ModLoader::addedCodeGenModules[image];
 
     MethodIndex startIdx = builder.methods.size();
     for (auto &method : methods) {
@@ -134,13 +138,19 @@ MethodIndex CreateMethods(TypeDefinitionIndex type,
         }
         // TODO: generics
         methodDef.genericContainerIndex = -1;
-        // TODO: token
-        methodDef.token = 0;
+        int32_t rid = moduleBuilder.GetNextMethodRID();
+        // The upper 8 bits of the token seem to be used for something other
+        // than the RID, but I don't know what it is and I don't see it being
+        // used.
+        methodDef.token = rid;
         methodDef.flags = method.flags;
         // TODO: vtable
-        methodDef.slot = 0;
+        methodDef.slot = -1;
         methodDef.parameterCount = method.parameters.size();
         builder.methods.push_back(methodDef);
+        int32_t invokerIdx = ModLoader::GetInvokersCount();
+        ModLoader::addedInvokers.push_back(method.invoker);
+        moduleBuilder.AppendMethod(method.methodPointer, invokerIdx);
     }
 
     return startIdx;

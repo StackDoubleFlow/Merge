@@ -47,3 +47,7 @@ Il2CppCodeGenModule *CodeGenModuleBuilder::Finish() {
 
     return mod;
 }
+
+int32_t CodeGenModuleBuilder::GetNextMethodRID() {
+    return methodPointers.size() + 1;
+}
