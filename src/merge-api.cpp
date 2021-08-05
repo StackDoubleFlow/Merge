@@ -7,7 +7,11 @@ void Initialize() { ModLoader::Initialize(); }
 
 std::optional<Il2CppTypeDefinition>
 FindTypeDefinition(std::string_view namespaze, std::string_view name) {
-    ModLoader::metadataBuilder.FindTypeDefinition(namespaze.data(), name.data());
+    auto idx = ModLoader::metadataBuilder.FindTypeDefinition(namespaze.data(),
+                                                             name.data());
+    if (!idx)
+        return std::nullopt;
+    return ModLoader::metadataBuilder.typeDefinitions[*idx];
 }
 
 TypeIndex CreateSZArrayType(TypeIndex elementType) {}
