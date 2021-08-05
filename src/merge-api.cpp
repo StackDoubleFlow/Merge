@@ -262,7 +262,7 @@ MethodIndex CreateMethods(ImageIndex image, TypeDefinitionIndex type,
         builder.methods.push_back(methodDef);
         int32_t invokerIdx = ModLoader::GetInvokersCount();
         ModLoader::addedInvokers.push_back(method.invoker);
-        logger.debug("Adding method %s, RID: %i", method.name, rid);
+        logger.debug("Adding method %s, RID: %i", method.name.c_str(), rid);
         moduleBuilder.AppendMethod(method.methodPointer, invokerIdx);
     }
 
@@ -309,6 +309,25 @@ void SetMethodDeclaringType(MethodIndex method, TypeIndex type) {
     ModLoader::metadataBuilder.methods[method].declaringType = type;
 }
 
+namespace {
+
+/// Check if parent is a parent of type
+bool RecursiveCheckParents(TypeDefinitionIndex typeIdx,
+                           TypeDefinitionIndex parentIdx) {
+    MetadataBuilder &builder = ModLoader::metadataBuilder;
+    if (typeIdx == -1) {
+        return false;
+    }
+    if (typeIdx == parentIdx) {
+        return true;
+    } else {
+        Il2CppTypeDefinition &type = builder.typeDefinitions[typeIdx];
+        return RecursiveCheckParents(type.parentIndex, parentIdx);
+    }
+}
+
+} // namespace
+
 void SetMethodOverrides(TypeDefinitionIndex typeIdx,
                         const OverridesMap &overrides) {
     auto logger =
@@ -316,6 +335,12 @@ void SetMethodOverrides(TypeDefinitionIndex typeIdx,
     MetadataBuilder &builder = ModLoader::metadataBuilder;
     Il2CppTypeDefinition &type = builder.typeDefinitions[typeIdx];
     for (auto &[oMethodIdx, vMethodIdx] : overrides) {
+        auto &oMethod = builder.methods[oMethodIdx];
+        if (oMethod.declaringType != typeIdx) {
+            logger.error("Overriding method %i does not belong to type %i",
+                         oMethodIdx, typeIdx);
+            SAFE_ABORT();
+        }
         auto &vMethod = builder.methods[vMethodIdx];
         // Check if vMethod exists in vtable interfaces offsets
         int interfaceOffset = -1;
@@ -327,12 +352,17 @@ void SetMethodOverrides(TypeDefinitionIndex typeIdx,
                 interfaceOffset = offsetPair.offset;
             }
         }
-        // TODO: Check in parents
-        if (interfaceOffset == -1) {
-            logger.error("Could not find method idx %i in interfaces",
+        uint16_t slot;
+        if (interfaceOffset != -1) {
+            slot = interfaceOffset + vMethod.slot;
+        } else if (RecursiveCheckParents(typeIdx, vMethod.declaringType)) {
+            // Method is in a parent type
+            slot = vMethod.slot;
+        } else {
+            logger.error("Could not find vMethod %i in parents or interfaces",
                          vMethodIdx);
+            SAFE_ABORT();
         }
-        uint16_t slot = interfaceOffset + vMethod.slot;
         builder.methods[oMethodIdx].slot = slot;
         VTableIndex vtableIdx = type.vtableStart + slot;
         EncodedMethodIndex encodedIdx = oMethodIdx;
