@@ -4,7 +4,7 @@
   "info": {
     "name": "Merge",
     "id": "merge",
-    "version": "0.1.0",
+    "version": "0.0.0",
     "url": "https://github.com/StackDoubleFlow/Merge",
     "additionalData": {
       "overrideSoName": "libmerge.so"
