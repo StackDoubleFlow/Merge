@@ -46,7 +46,15 @@ struct MergeTypeDefinition {
     std::vector<TypeIndex> interfaces;
 };
 
-enum struct AttributeTarget { Type, Method, Property, Field };
+enum struct AttributeTarget {
+    Type,
+    Method,
+    Property,
+    Field,
+    Parameter,
+    Assembly,
+    Event
+};
 
 struct MergeCustomAttributeTarget {
     AttributeTarget targetType;

@@ -416,6 +416,12 @@ void SetCustomAttributes(ImageIndex imageIdx,
             typeRange.token = builder.properties[caTarget.targetIdx].token;
         case AttributeTarget::Field:
             typeRange.token = builder.fields[caTarget.targetIdx].token;
+        case AttributeTarget::Parameter:
+            typeRange.token = builder.parameters[caTarget.targetIdx].token;
+        case AttributeTarget::Assembly:
+            typeRange.token = builder.assemblies[caTarget.targetIdx].token;
+        case AttributeTarget::Event:
+            typeRange.token = builder.events[caTarget.targetIdx].token;
         }
         for (CustomAttributeIndex caIdx : caTarget.attributes) {
             builder.attributeTypes.push_back(caIdx);

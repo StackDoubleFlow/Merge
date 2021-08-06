@@ -23,6 +23,7 @@ bool ModLoader::initialized;
 
 MetadataBuilder ModLoader::metadataBuilder;
 std::vector<Il2CppType *> ModLoader::addedTypes;
+std::vector<CustomAttributesCacheGenerator> ModLoader::addedCACacheGenerators;
 std::vector<InvokerMethod> ModLoader::addedInvokers;
 std::unordered_map<ImageIndex, CodeGenModuleBuilder> ModLoader::addedCodeGenModules;
 
