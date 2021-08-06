@@ -38,6 +38,8 @@ struct MergeTypeDefinition {
     uint16_t attrs;
     Il2CppTypeEnum typeEnum;
     bool valueType;
+    TypeIndex *interfaces;
+    int32_t interfacesCount;
 };
 
 #if defined(__cplusplus)
@@ -45,11 +47,16 @@ extern "C" {
 #endif // __cplusplus
 
 void merge_initialize();
-Il2CppTypeDefinition *merge_get_type_definition(char *namespaze, char *name);
+TypeDefinitionIndex merge_find_type_definition_index(char *namespaze,
+                                                     char *name);
+Il2CppTypeDefinition merge_get_type_definition(TypeDefinitionIndex idx);
+MethodIndex merge_find_method_definition_index(TypeDefinitionIndex typeIdx,
+                                               char *name, uint16_t paramCount);
+Il2CppMethodDefinition merge_get_method_definition(MethodIndex idx);
 TypeIndex merge_create_sz_array_type(TypeIndex elementType);
 TypeIndex merge_create_pointer_type(TypeIndex type);
-ImageIndex merge_create_image(char *name);
-AssemblyIndex merge_create_assembly(ImageIndex image, char *name);
+AssemblyIndex merge_create_assembly(char *name);
+ImageIndex merge_create_image(AssemblyIndex assembly, char *name);
 TypeDefinitionIndex merge_create_types(ImageIndex image,
                                        MergeTypeDefinition *types,
                                        int32_t typesCount);
@@ -63,6 +70,10 @@ PropertyIndex merge_create_properties(TypeDefinitionIndex type,
                                       MergePropertyDefinition *properties,
                                       int32_t propertiesCount);
 void merge_set_method_declaring_type(MethodIndex method, TypeIndex type);
+void merge_set_method_overrides(TypeDefinitionIndex type,
+                                uint32_t overridingMethodsCount,
+                                MethodIndex *overridingMethods,
+                                MethodIndex *virtualMethods);
 
 #if defined(__cplusplus)
 }

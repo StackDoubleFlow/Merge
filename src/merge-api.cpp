@@ -7,19 +7,24 @@ namespace Merge::API {
 
 void Initialize() { ModLoader::Initialize(); }
 
-std::optional<TypeDefinitionIndex>
-FindTypeDefinitionIndex(std::string_view namespaze, std::string_view name) {
-    return ModLoader::metadataBuilder.FindTypeDefinition(namespaze.data(),
+TypeDefinitionIndex FindTypeDefinitionIndex(std::string_view namespaze,
+                                            std::string_view name) {
+    auto td = ModLoader::metadataBuilder.FindTypeDefinition(namespaze.data(),
                                                          name.data());
+    if (td) {
+        return *td;
+    } else {
+        return -1;
+    }
 }
 
 Il2CppTypeDefinition GetTypeDefinition(TypeDefinitionIndex idx) {
     return ModLoader::metadataBuilder.typeDefinitions[idx];
 }
 
-std::optional<MethodIndex>
-FindMethodDefinitionIndex(TypeDefinitionIndex typeIdx, std::string_view name,
-                          uint16_t paramCount) {
+MethodIndex FindMethodDefinitionIndex(TypeDefinitionIndex typeIdx,
+                                      std::string_view name,
+                                      uint16_t paramCount) {
     MetadataBuilder &builder = ModLoader::metadataBuilder;
 
     Il2CppTypeDefinition &type = builder.typeDefinitions[typeIdx];
@@ -31,7 +36,7 @@ FindMethodDefinitionIndex(TypeDefinitionIndex typeIdx, std::string_view name,
         }
     }
 
-    return std::nullopt;
+    return -1;
 }
 
 Il2CppMethodDefinition GetMethodDefinition(MethodIndex idx) {
@@ -349,9 +354,8 @@ void SetMethodOverrides(TypeDefinitionIndex typeIdx,
             SAFE_ABORT();
         }
         auto &vMethod = builder.methods[vMethodIdx];
-        if (vMethod.slot == -1) {
-            logger.error("Tried to override non-virtual method %i",
-                         vMethodIdx);
+        if (static_cast<int16_t>(vMethod.slot) == -1) {
+            logger.error("Tried to override non-virtual method %i", vMethodIdx);
             SAFE_ABORT();
         }
         // Check if vMethod exists in vtable interfaces offsets

@@ -2,11 +2,10 @@
 
 #include "il2cpp-class-internals.h"
 #include "il2cpp-metadata.h"
-#include <optional>
 #include <span>
 #include <string>
-#include <vector>
 #include <unordered_map>
+#include <vector>
 
 namespace Merge::API {
 
@@ -55,10 +54,10 @@ void Initialize();
  *
  * @param namespaze The namespace of the type.
  * @param name The name of the type.
- * @return The index of the type definition of it was found, otherwise nullopt
+ * @return The index of the type definition of it was found, otherwise -1
  */
-std::optional<TypeDefinitionIndex>
-FindTypeDefinitionIndex(std::string_view namespaze, std::string_view name);
+TypeDefinitionIndex FindTypeDefinitionIndex(std::string_view namespaze,
+                                            std::string_view name);
 
 /**
  * Gets an existing type definition from the metadata at the specified index.
@@ -74,11 +73,11 @@ Il2CppTypeDefinition GetTypeDefinition(TypeDefinitionIndex idx);
  * @param type The type to look in.
  * @param name The name of the method.
  * @param paramCount The number of parameters the method has.
- * @return The index of the method definition of it was found, otherwise nullopt
+ * @return The index of the method definition of it was found, otherwise -1
  */
-std::optional<MethodIndex>
-FindMethodDefinitionIndex(TypeDefinitionIndex typeIdx, std::string_view name,
-                          uint16_t paramCount);
+MethodIndex FindMethodDefinitionIndex(TypeDefinitionIndex typeIdx,
+                                      std::string_view name,
+                                      uint16_t paramCount);
 
 /**
  * Gets an existing method definition from the metadata at the specified index.
@@ -177,7 +176,7 @@ using OverridesMap = std::unordered_map<MethodIndex, MethodIndex>;
 
 /**
  * Overrides virtual methods of the parent type and implementing interfaces.
- * 
+ *
  * This will populate `type`'s vtable;
  *
  * @param type The type doing the overriding.
