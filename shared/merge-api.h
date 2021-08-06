@@ -177,7 +177,10 @@ using OverridesMap = std::unordered_map<MethodIndex, MethodIndex>;
 /**
  * Overrides virtual methods of the parent type and implementing interfaces.
  *
- * This will populate `type`'s vtable;
+ * This will populate `type`'s vtable. Crashes if the overriding method is not a
+ * member of `type`, the virtual method you are trying to override is not a
+ * member of the parents or interfaces, or the method you are
+ * trying to override does not have a slot in the vtable.
  *
  * @param type The type doing the overriding.
  * @param overrides Mapping of the methods in `type` to the methods you want to
