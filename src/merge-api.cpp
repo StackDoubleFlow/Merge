@@ -10,7 +10,7 @@ void Initialize() { ModLoader::Initialize(); }
 TypeDefinitionIndex FindTypeDefinitionIndex(std::string_view namespaze,
                                             std::string_view name) {
     auto td = ModLoader::metadataBuilder.FindTypeDefinition(namespaze.data(),
-                                                         name.data());
+                                                            name.data());
     if (td) {
         return *td;
     } else {
@@ -384,6 +384,51 @@ void SetMethodOverrides(TypeDefinitionIndex typeIdx,
         encodedIdx |= (kIl2CppMetadataUsageMethodDef << 29);
         builder.vtableMethods[vtableIdx] = encodedIdx;
     }
+}
+
+namespace {
+
+bool CARangeTokenComparer(Il2CppCustomAttributeTypeRange a,
+                          Il2CppCustomAttributeTypeRange b) {
+    return a.token < b.token;
+}
+
+} // namespace
+
+void SetCustomAttributes(ImageIndex imageIdx,
+                         std::span<MergeCustomAttributeTarget> targets) {
+    MetadataBuilder &builder = ModLoader::metadataBuilder;
+
+    Il2CppImageDefinition &image = builder.images[imageIdx];
+    image.customAttributeStart = builder.attributesInfo.size();
+    image.customAttributeCount = targets.size();
+
+    for (MergeCustomAttributeTarget &caTarget : targets) {
+        Il2CppCustomAttributeTypeRange typeRange;
+        typeRange.start = builder.attributeTypes.size();
+        typeRange.count = caTarget.attributes.size();
+        switch (caTarget.targetType) {
+        case AttributeTarget::Type:
+            typeRange.token = builder.typeDefinitions[caTarget.targetIdx].token;
+        case AttributeTarget::Method:
+            typeRange.token = builder.methods[caTarget.targetIdx].token;
+        case AttributeTarget::Property:
+            typeRange.token = builder.properties[caTarget.targetIdx].token;
+        case AttributeTarget::Field:
+            typeRange.token = builder.fields[caTarget.targetIdx].token;
+        }
+        for (CustomAttributeIndex caIdx : caTarget.attributes) {
+            builder.attributeTypes.push_back(caIdx);
+        }
+        builder.attributesInfo.push_back(typeRange);
+        // TODO: add generator to code registration
+    }
+
+    // Sort by token for bsearch
+    std::sort(builder.attributesInfo.begin() + image.customAttributeStart,
+              builder.attributesInfo.begin() + image.customAttributeStart +
+                  image.customAttributeCount,
+              CARangeTokenComparer);
 }
 
 } // end namespace Merge::API

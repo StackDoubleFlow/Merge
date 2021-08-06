@@ -46,6 +46,15 @@ struct MergeTypeDefinition {
     std::vector<TypeIndex> interfaces;
 };
 
+enum struct AttributeTarget { Type, Method, Property, Field };
+
+struct MergeCustomAttributeTarget {
+    AttributeTarget targetType;
+    uint32_t targetIdx;
+    CustomAttributesCacheGenerator generator;
+    std::vector<TypeIndex> attributes;
+};
+
 /// Initialize Merge and its API. Call this before anything else.
 void Initialize();
 
@@ -182,11 +191,25 @@ using OverridesMap = std::unordered_map<MethodIndex, MethodIndex>;
  * member of the parents or interfaces, or the method you are
  * trying to override does not have a slot in the vtable.
  *
+ * This can be called multiple times for a type. Because of this, it does not
+ * check if any slots in the vtable go unpopulated.
+ *
  * @param type The type doing the overriding.
  * @param overrides Mapping of the methods in `type` to the methods you want to
  * override
  */
 void SetMethodOverrides(TypeDefinitionIndex type,
                         const OverridesMap &overrides);
+
+/**
+ * Set all the custom attributes in an image.
+ *
+ * This should only be called once per image.
+ *
+ * @param image The image containing the targets.
+ * @param targets Each target to set the custom attributes of.
+ */
+void SetCustomAttributes(ImageIndex image,
+                         std::span<MergeCustomAttributeTarget> targets);
 
 } // end namespace Merge::API
