@@ -375,7 +375,6 @@ void SetMethodOverrides(TypeDefinitionIndex typeIdx,
                          vMethodIdx);
             SAFE_ABORT();
         }
-        builder.methods[oMethodIdx].slot = slot;
         VTableIndex vtableIdx = type.vtableStart + slot;
         EncodedMethodIndex encodedIdx = oMethodIdx;
         encodedIdx |= (kIl2CppMetadataUsageMethodDef << 29);
