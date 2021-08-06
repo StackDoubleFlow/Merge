@@ -1,6 +1,6 @@
 #pragma once
-#include "MetadataBuilder.h"
 #include "CodeGenModuleBuilder.h"
+#include "MetadataBuilder.h"
 #include "ModReader.h"
 
 struct Il2CppCodeRegistration;
@@ -27,6 +27,7 @@ public:
     static MetadataBuilder metadataBuilder;
     static std::vector<Il2CppType *> addedTypes;
     static std::vector<InvokerMethod> addedInvokers;
+    static std::vector<CustomAttributesCacheGenerator> addedCACacheGenerators;
     static std::unordered_map<ImageIndex, CodeGenModuleBuilder>
         addedCodeGenModules;
 

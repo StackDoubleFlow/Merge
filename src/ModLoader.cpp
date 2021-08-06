@@ -105,6 +105,10 @@ void ModLoader::FixupCodeRegistration(Il2CppCodeRegistration *&codeRegistration,
     std::vector<InvokerMethod> invokerMethods(codeRegistration->invokerPointers, codeRegistration->invokerPointers + codeRegistration->invokerPointersCount);
     invokerMethods.insert(invokerMethods.end(), addedInvokers.begin(), addedInvokers.end());
 
+    // codeRegistration->customAttributeGenerators
+    std::vector<CustomAttributesCacheGenerator> caGenerators(codeRegistration->customAttributeGenerators, codeRegistration->customAttributeGenerators + codeRegistration->customAttributeCount);
+    caGenerators.insert(caGenerators.end(), addedCACacheGenerators.begin(), addedCACacheGenerators.end());
+
     // metadataRegistration->types
     std::vector<const Il2CppType *> types(metadataRegistration->types, metadataRegistration->types + metadataRegistration->typesCount);
     types.insert(types.end(), addedTypes.begin(), addedTypes.end());
@@ -164,6 +168,11 @@ void ModLoader::FixupCodeRegistration(Il2CppCodeRegistration *&codeRegistration,
     std::copy(invokerMethods.begin(), invokerMethods.end(), newInvokerMethods);
     codeRegistration->invokerPointers = newInvokerMethods;
     codeRegistration->invokerPointersCount = invokerMethods.size();
+
+    CustomAttributesCacheGenerator *newCAGenerators = new CustomAttributesCacheGenerator[caGenerators.size()];
+    std::copy(caGenerators.begin(), caGenerators.end(), newCAGenerators);
+    codeRegistration->customAttributeGenerators = newCAGenerators;
+    codeRegistration->customAttributeCount = caGenerators.size();
     
     const Il2CppType **newTypes = new const Il2CppType*[types.size()];
     std::copy(types.begin(), types.end(), newTypes);

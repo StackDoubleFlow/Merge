@@ -421,7 +421,7 @@ void SetCustomAttributes(ImageIndex imageIdx,
             builder.attributeTypes.push_back(caIdx);
         }
         builder.attributesInfo.push_back(typeRange);
-        // TODO: add generator to code registration
+        ModLoader::addedCACacheGenerators.push_back(caTarget.generator);
     }
 
     // Sort by token for bsearch
