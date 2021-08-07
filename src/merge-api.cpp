@@ -122,6 +122,100 @@ TypeDefinitionIndex GetInheritingDefinition(TypeIndex idx) {
     }
 }
 
+Il2CppTypeDefinition CreateType(ImageIndex image,
+                                const MergeTypeDefinition &type) {
+    MetadataBuilder &builder = ModLoader::metadataBuilder;
+    TypeDefinitionIndex idx = builder.typeDefinitions.size();
+
+    Il2CppTypeDefinition typeDef;
+    typeDef.nameIndex = builder.AppendString(type.name.c_str());
+    typeDef.namespaceIndex = builder.AppendString(type.namespaze.c_str());
+    typeDef.byvalTypeIndex = ModLoader::GetTypesCount();
+    Il2CppType addedType;
+    addedType.data.klassIndex = idx;
+    addedType.attrs = 0;
+    addedType.type = type.typeEnum;
+    addedType.byref = false;
+    ModLoader::addedTypes.push_back(new Il2CppType(addedType));
+    typeDef.byrefTypeIndex = ModLoader::GetTypesCount();
+    addedType.byref = true;
+    ModLoader::addedTypes.push_back(new Il2CppType(addedType));
+    typeDef.declaringTypeIndex = -1;
+    typeDef.parentIndex = type.parent;
+    typeDef.elementTypeIndex = -1;
+    // TODO: Generics
+    typeDef.genericContainerIndex = -1;
+    typeDef.flags = type.attrs;
+    typeDef.fieldStart = -1;
+    typeDef.methodStart = -1;
+    typeDef.eventStart = -1;
+    typeDef.propertyStart = -1;
+    typeDef.nestedTypesStart = -1;
+    typeDef.method_count = 0;
+    typeDef.property_count = 0;
+    typeDef.field_count = 0;
+    typeDef.event_count = 0;
+    typeDef.nested_type_count = 0;
+    typeDef.bitfield = 0;
+    typeDef.bitfield |= type.valueType & 1;
+    if (type.typeEnum == IL2CPP_TYPE_ENUM)
+        typeDef.bitfield |= 2;
+    typeDef.token = ModLoader::tokenGenerators[image].GetNextTypeDefToken();
+
+    const Il2CppTypeDefinition &parentDef =
+        builder.typeDefinitions[GetInheritingDefinition(type.parent)];
+
+    typeDef.interfacesStart = builder.interfaces.size();
+    // Copy interfaces of parent
+    builder.interfaces.insert(
+        builder.interfaces.end(),
+        builder.interfaces.begin() + parentDef.interfacesStart,
+        builder.interfaces.begin() + parentDef.interfacesStart +
+            parentDef.interfaces_count);
+    // Add new interfaces
+    builder.interfaces.insert(builder.interfaces.end(), type.interfaces.begin(),
+                              type.interfaces.end());
+    typeDef.interfaces_count =
+        builder.interfaceOffsets.size() - typeDef.interfacesStart;
+
+    typeDef.interfaceOffsetsStart = builder.interfaceOffsets.size();
+    typeDef.interface_offsets_count = typeDef.interfaces_count;
+    // Copy interface offsets of parent
+    builder.interfaceOffsets.insert(
+        builder.interfaceOffsets.end(),
+        builder.interfaceOffsets.begin() + parentDef.interfaceOffsetsStart,
+        builder.interfaceOffsets.begin() + parentDef.interfaceOffsetsStart +
+            parentDef.interface_offsets_count);
+
+    typeDef.vtableStart = builder.vtableMethods.size();
+    // Copy vtable of parent
+    builder.vtableMethods.insert(
+        builder.vtableMethods.end(),
+        builder.vtableMethods.begin() + parentDef.vtableStart,
+        builder.vtableMethods.begin() + parentDef.vtableStart +
+            parentDef.vtable_count);
+
+    for (TypeIndex interfaceidx : type.interfaces) {
+        uint16_t slot = builder.vtableMethods.size() - typeDef.vtableStart;
+        Il2CppInterfaceOffsetPair offsetPair{interfaceidx, slot};
+        builder.interfaceOffsets.push_back(offsetPair);
+
+        const Il2CppTypeDefinition &interfaceDef =
+            builder.typeDefinitions[GetInheritingDefinition(interfaceidx)];
+        for (uint16_t i = 0; i < interfaceDef.method_count; i++) {
+            auto &method = builder.methods[interfaceDef.methodStart];
+            MLogger::GetLogger().debug("Placing method with slot %i at slot %i",
+                                       method.slot, i);
+            // vtable should be populated later with a call to
+            // SetMethodOverrides
+            builder.vtableMethods.push_back(-1);
+        }
+    }
+    typeDef.vtable_count = builder.vtableMethods.size() - typeDef.vtableStart;
+
+    return typeDef;
+}
+
 } // namespace
 
 TypeDefinitionIndex CreateTypes(ImageIndex image,
@@ -131,98 +225,9 @@ TypeDefinitionIndex CreateTypes(ImageIndex image,
 
     TypeDefinitionIndex startIdx = builder.typeDefinitions.size();
     for (auto &type : types) {
-        TypeDefinitionIndex idx = builder.typeDefinitions.size();
-
-        Il2CppTypeDefinition typeDef;
-        typeDef.nameIndex = builder.AppendString(type.name.c_str());
-        typeDef.namespaceIndex = builder.AppendString(type.namespaze.c_str());
-        typeDef.byvalTypeIndex = ModLoader::GetTypesCount();
-        Il2CppType addedType;
-        addedType.data.klassIndex = idx;
-        addedType.attrs = 0;
-        addedType.type = type.typeEnum;
-        addedType.byref = false;
-        ModLoader::addedTypes.push_back(new Il2CppType(addedType));
-        typeDef.byrefTypeIndex = ModLoader::GetTypesCount();
-        addedType.byref = true;
-        ModLoader::addedTypes.push_back(new Il2CppType(addedType));
-        typeDef.declaringTypeIndex = -1;
-        typeDef.parentIndex = type.parent;
-        typeDef.elementTypeIndex = -1;
-        // TODO: Generics
-        typeDef.genericContainerIndex = -1;
-        typeDef.flags = type.attrs;
-        typeDef.fieldStart = -1;
-        typeDef.methodStart = -1;
-        typeDef.eventStart = -1;
-        typeDef.propertyStart = -1;
-        typeDef.nestedTypesStart = -1;
-        typeDef.method_count = 0;
-        typeDef.property_count = 0;
-        typeDef.field_count = 0;
-        typeDef.event_count = 0;
-        typeDef.nested_type_count = 0;
-        typeDef.bitfield = 0;
-        typeDef.bitfield |= type.valueType & 1;
-        if (type.typeEnum == IL2CPP_TYPE_ENUM)
-            typeDef.bitfield |= 2;
-        typeDef.token = ModLoader::tokenGenerators[image].GetNextTypeDefToken();
-
-        const Il2CppTypeDefinition &parentDef =
-            builder.typeDefinitions[GetInheritingDefinition(type.parent)];
-
-        typeDef.interfacesStart = builder.interfaces.size();
-        // Copy interfaces of parent
-        builder.interfaces.insert(
-            builder.interfaces.end(),
-            builder.interfaces.begin() + parentDef.interfacesStart,
-            builder.interfaces.begin() + parentDef.interfacesStart +
-                parentDef.interfaces_count);
-        // Add new interfaces
-        builder.interfaces.insert(builder.interfaces.end(),
-                                  type.interfaces.begin(),
-                                  type.interfaces.end());
-        typeDef.interfaces_count =
-            builder.interfaceOffsets.size() - typeDef.interfacesStart;
-
-        typeDef.interfaceOffsetsStart = builder.interfaceOffsets.size();
-        typeDef.interface_offsets_count = typeDef.interfaces_count;
-        // Copy interface offsets of parent
-        builder.interfaceOffsets.insert(
-            builder.interfaceOffsets.end(),
-            builder.interfaceOffsets.begin() + parentDef.interfaceOffsetsStart,
-            builder.interfaceOffsets.begin() + parentDef.interfaceOffsetsStart +
-                parentDef.interface_offsets_count);
-
-        typeDef.vtableStart = builder.vtableMethods.size();
-        // Copy vtable of parent
-        builder.vtableMethods.insert(
-            builder.vtableMethods.end(),
-            builder.vtableMethods.begin() + parentDef.vtableStart,
-            builder.vtableMethods.begin() + parentDef.vtableStart +
-                parentDef.vtable_count);
-
-        for (TypeIndex interfaceidx : type.interfaces) {
-            uint16_t slot = builder.vtableMethods.size() - typeDef.vtableStart;
-            Il2CppInterfaceOffsetPair offsetPair{interfaceidx, slot};
-            builder.interfaceOffsets.push_back(offsetPair);
-
-            const Il2CppTypeDefinition &interfaceDef =
-                builder.typeDefinitions[GetInheritingDefinition(interfaceidx)];
-            for (uint16_t i = 0; i < interfaceDef.method_count; i++) {
-                auto &method = builder.methods[interfaceDef.methodStart];
-                MLogger::GetLogger().debug(
-                    "Placing method with slot %i at slot %i", method.slot, i);
-                // vtable should be populated later with a call to
-                // SetMethodOverrides
-                builder.vtableMethods.push_back(-1);
-            }
-        }
-        typeDef.vtable_count =
-            builder.vtableMethods.size() - typeDef.vtableStart;
-
+        Il2CppTypeDefinition typeDef = CreateType(image, type);
         logger.debug(
-            "Adding type %s.%s, interfaces count: %hi, vtable size: %hi",
+            "Creating type %s.%s, interfaces count: %hi, vtable size: %hi",
             type.namespaze.c_str(), type.name.c_str(), typeDef.interfaces_count,
             typeDef.vtable_count);
         builder.typeDefinitions.push_back(typeDef);
@@ -230,6 +235,25 @@ TypeDefinitionIndex CreateTypes(ImageIndex image,
 
     builder.images[image].typeStart = startIdx;
     builder.images[image].typeCount = types.size();
+
+    return startIdx;
+}
+
+TypeDefinitionIndex AppendTypes(std::span<MergeTypeDefinition> types) {
+    auto logger = MLogger::GetLogger().WithContext("Merge::API::AppendTypes");
+    MetadataBuilder &builder = ModLoader::metadataBuilder;
+
+    ImageIndex image = builder.images.size() - 1;
+    TypeDefinitionIndex startIdx = builder.typeDefinitions.size();
+    for (auto &type : types) {
+        Il2CppTypeDefinition typeDef = CreateType(image, type);
+        logger.debug(
+            "Appending type %s.%s, interfaces count: %hi, vtable size: %hi",
+            type.namespaze.c_str(), type.name.c_str(), typeDef.interfaces_count,
+            typeDef.vtable_count);
+        builder.typeDefinitions.push_back(typeDef);
+    }
+    builder.images[image].typeCount += types.size();
 
     return startIdx;
 }

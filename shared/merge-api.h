@@ -141,14 +141,22 @@ AssemblyIndex CreateAssembly(std::string_view name);
 ImageIndex CreateImage(AssemblyIndex assembly, std::string_view name);
 
 /**
- * Creates type definitions in the assembly.
+ * Creates type definitions in the image.
  *
- * @param assembly The assembly to create type defintions in.
+ * @param image The image to create type defintions in.
  * @param types Descriptions of the types to create.
  * @return Index of first type definition created.
  */
 TypeDefinitionIndex CreateTypes(ImageIndex image,
                                 std::span<MergeTypeDefinition> types);
+
+/**
+ * Appends types to the last created image.
+ *
+ * @param types Descriptions of the types to create.
+ * @return Index of first type definition appended to the image.
+ */
+TypeDefinitionIndex AppendTypes(std::span<MergeTypeDefinition> types);
 
 /**
  * Creates methods in a type.
