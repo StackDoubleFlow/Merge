@@ -218,8 +218,11 @@ Il2CppTypeDefinition CreateType(ImageIndex image,
 
 } // namespace
 
+static ImageIndex lastCreateTypesImage = -1;
+
 TypeDefinitionIndex CreateTypes(ImageIndex image,
                                 std::span<MergeTypeDefinition> types) {
+    lastCreateTypesImage = image;
     auto logger = MLogger::GetLogger().WithContext("Merge::API::CreateTypes");
     MetadataBuilder &builder = ModLoader::metadataBuilder;
 
@@ -243,7 +246,12 @@ TypeDefinitionIndex AppendTypes(std::span<MergeTypeDefinition> types) {
     auto logger = MLogger::GetLogger().WithContext("Merge::API::AppendTypes");
     MetadataBuilder &builder = ModLoader::metadataBuilder;
 
-    ImageIndex image = builder.images.size() - 1;
+    ImageIndex image = lastCreateTypesImage;
+    if (image == -1) {
+        logger.error("You must call CreateTypes before using AppendTypes");
+        SAFE_ABORT();
+    }
+
     TypeDefinitionIndex startIdx = builder.typeDefinitions.size();
     for (auto &type : types) {
         Il2CppTypeDefinition typeDef = CreateType(image, type);

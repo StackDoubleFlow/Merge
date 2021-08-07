@@ -151,7 +151,7 @@ TypeDefinitionIndex CreateTypes(ImageIndex image,
                                 std::span<MergeTypeDefinition> types);
 
 /**
- * Appends types to the last created image.
+ * Appends types to the last image you used CreateTypes with.
  *
  * @param types Descriptions of the types to create.
  * @return Index of first type definition appended to the image.
