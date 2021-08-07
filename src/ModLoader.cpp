@@ -59,7 +59,7 @@ void ModLoader::Initialize() {
     // MetadataLoader::LoadMetadataFile
     int32_t *MetadataLoader_LoadMetadataFile = xref.bl(1);
     INSTALL_HOOK_DIRECT(logger, MetadataLoader_LoadMetadataFile,
-                        static_cast<void *>(MetadataLoader_LoadMetadataFile));
+                        MetadataLoader_LoadMetadataFile);
 
     xref.Init(Runtime_Init);
     // RegisterRuntimeInitializeAndCleanup::ExecuteInitializations
@@ -192,7 +192,7 @@ void ModLoader::FixupCodeRegistration(
             }
             MLogger::GetLogger().debug("Adding codegen module: %s",
                                        moduleName.c_str());
-            
+
             // Add invokers from mod
             int32_t invokerOffset = invokerMethods.size();
             size_t invokersCount = g_CodeRegistration->invokerPointersCount;
