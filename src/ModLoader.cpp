@@ -26,6 +26,7 @@ std::vector<Il2CppType *> ModLoader::addedTypes;
 std::vector<CustomAttributesCacheGenerator> ModLoader::addedCACacheGenerators;
 std::vector<InvokerMethod> ModLoader::addedInvokers;
 std::unordered_map<ImageIndex, CodeGenModuleBuilder> ModLoader::addedCodeGenModules;
+std::unordered_map<ImageIndex, TokenGenerator> ModLoader::tokenGenerators;
 
 const Il2CppMetadataRegistration *ModLoader::g_MetadataRegistration;
 const Il2CppCodeRegistration *ModLoader::g_CodeRegistration;

@@ -75,8 +75,8 @@ AssemblyIndex CreateAssembly(std::string_view name) {
     assembly.imageIndex = -1;
     assembly.referencedAssemblyStart = -1;
     assembly.referencedAssemblyCount = 0;
-    // TODO: token
-    assembly.token = 0;
+    // Is the assembly rid ever not 0?
+    assembly.token = 0x20000000;
 
     AssemblyIndex idx = builder.assemblies.size();
     builder.assemblies.push_back(assembly);
@@ -96,7 +96,7 @@ ImageIndex CreateImage(AssemblyIndex assemblyIdx, std::string_view name) {
     image.exportedTypeStart = -1;
     image.exportedTypeCount = 0;
     image.entryPointIndex = -1;
-    // TODO: token
+    // Is this the correct image token?
     image.token = 0;
     image.customAttributeStart = -1;
     image.customAttributeCount = 0;
@@ -166,6 +166,7 @@ TypeDefinitionIndex CreateTypes(ImageIndex image,
         typeDef.bitfield |= type.valueType & 1;
         if (type.typeEnum == IL2CPP_TYPE_ENUM)
             typeDef.bitfield |= 2;
+        typeDef.token = ModLoader::tokenGenerators[image].GetNextTypeDefToken();
 
         const Il2CppTypeDefinition &parentDef =
             builder.typeDefinitions[GetInheritingDefinition(type.parent)];
@@ -251,16 +252,17 @@ MethodIndex CreateMethods(ImageIndex image, TypeDefinitionIndex type,
             Il2CppParameterDefinition paramDef;
             paramDef.nameIndex = builder.AppendString(param.name.c_str());
             paramDef.typeIndex = param.type;
-            // TODO: token
-            paramDef.token = 0;
+            paramDef.token =
+                ModLoader::tokenGenerators[image].GetNextParamToken();
         }
         // TODO: generics
         methodDef.genericContainerIndex = -1;
         int32_t rid = moduleBuilder.GetNextMethodRID();
-        // The upper 8 bits of the token seem to be used for something other
-        // than the RID, but I don't know what it is and I don't see it being
-        // used.
-        methodDef.token = rid;
+        methodDef.token =
+            ModLoader::tokenGenerators[image].GetNextMethodToken();
+        // Check if the token matches the rid in the moduleBuilder. If it
+        // doesn't, things are out of sync and will definitely go wrong.
+        CRASH_UNLESS((methodDef.token & 0x00FFFFFF) == rid);
         methodDef.flags = method.flags;
         methodDef.slot = -1;
         methodDef.parameterCount = method.parameters.size();
@@ -281,7 +283,7 @@ MethodIndex CreateMethods(ImageIndex image, TypeDefinitionIndex type,
     return startIdx;
 }
 
-FieldIndex CreateFields(TypeDefinitionIndex type,
+FieldIndex CreateFields(ImageIndex image, TypeDefinitionIndex type,
                         std::span<MergeFieldDefinition> fields) {
     MetadataBuilder &builder = ModLoader::metadataBuilder;
 
@@ -290,15 +292,14 @@ FieldIndex CreateFields(TypeDefinitionIndex type,
         Il2CppFieldDefinition fieldDef;
         fieldDef.nameIndex = builder.AppendString(field.name.c_str());
         fieldDef.typeIndex = field.type;
-        // TODO: token
-        fieldDef.token = 0;
+        fieldDef.token = ModLoader::tokenGenerators[image].GetNextFieldToken();
         builder.fields.push_back(fieldDef);
     }
 
     return startIdx;
 }
 
-PropertyIndex CreateProperties(TypeDefinitionIndex type,
+PropertyIndex CreateProperties(ImageIndex image, TypeDefinitionIndex type,
                                std::span<MergePropertyDefinition> properties) {
     MetadataBuilder &builder = ModLoader::metadataBuilder;
 
@@ -309,8 +310,7 @@ PropertyIndex CreateProperties(TypeDefinitionIndex type,
         propDef.get = prop.get;
         propDef.set = prop.set;
         propDef.attrs = prop.attrs;
-        // TODO: token
-        propDef.token = 0;
+        propDef.token = ModLoader::tokenGenerators[image].GetNextPropToken();
         builder.properties.push_back(propDef);
     }
 

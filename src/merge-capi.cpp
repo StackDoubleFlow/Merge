@@ -86,7 +86,7 @@ MethodIndex merge_create_methods(ImageIndex image, TypeDefinitionIndex type,
     return Merge::API::CreateMethods(image, type, std::span(vec));
 }
 
-FieldIndex merge_create_fields(TypeDefinitionIndex type,
+FieldIndex merge_create_fields(ImageIndex image, TypeDefinitionIndex type,
                                MergeFieldDefinition *fields,
                                int32_t fieldsCount) {
     std::vector<Merge::API::MergeFieldDefinition> vec;
@@ -97,10 +97,11 @@ FieldIndex merge_create_fields(TypeDefinitionIndex type,
         fieldDef.name = cFieldDef.type;
         vec.push_back(fieldDef);
     }
-    return Merge::API::CreateFields(type, std::span(vec));
+    return Merge::API::CreateFields(image, type, std::span(vec));
 }
 
-PropertyIndex merge_create_properties(TypeDefinitionIndex type,
+PropertyIndex merge_create_properties(ImageIndex image,
+                                      TypeDefinitionIndex type,
                                       MergePropertyDefinition *properties,
                                       int32_t propertiesCount) {
     std::vector<Merge::API::MergePropertyDefinition> vec;
@@ -113,7 +114,7 @@ PropertyIndex merge_create_properties(TypeDefinitionIndex type,
         propDef.attrs = cPropDef.attrs;
         vec.push_back(propDef);
     }
-    return Merge::API::CreateProperties(type, std::span(vec));
+    return Merge::API::CreateProperties(image, type, std::span(vec));
 }
 
 void merge_set_method_declaring_type(MethodIndex method, TypeIndex type) {

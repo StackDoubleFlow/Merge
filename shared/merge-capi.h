@@ -63,10 +63,11 @@ TypeDefinitionIndex merge_create_types(ImageIndex image,
 MethodIndex merge_create_methods(ImageIndex image, TypeDefinitionIndex type,
                                  MergeMethodDefinition *methods,
                                  int32_t methodsCount);
-FieldIndex merge_create_fields(TypeDefinitionIndex type,
+FieldIndex merge_create_fields(ImageIndex image, TypeDefinitionIndex type,
                                MergeFieldDefinition *fields,
                                int32_t fieldsCount);
-PropertyIndex merge_create_properties(TypeDefinitionIndex type,
+PropertyIndex merge_create_properties(ImageIndex image,
+                                      TypeDefinitionIndex type,
                                       MergePropertyDefinition *properties,
                                       int32_t propertiesCount);
 void merge_set_method_declaring_type(MethodIndex method, TypeIndex type);

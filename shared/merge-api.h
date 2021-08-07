@@ -168,7 +168,7 @@ MethodIndex CreateMethods(ImageIndex image, TypeDefinitionIndex type,
  * @param fields Descriptions of the fields to create.
  * @return Index of the first field created.
  */
-FieldIndex CreateFields(TypeDefinitionIndex type,
+FieldIndex CreateFields(ImageIndex image, TypeDefinitionIndex type,
                         std::span<MergeFieldDefinition> fields);
 
 /**
@@ -178,7 +178,7 @@ FieldIndex CreateFields(TypeDefinitionIndex type,
  * @param properties Descriptions of the properties to create.
  * @return Index of the first property created.
  */
-PropertyIndex CreateProperties(TypeDefinitionIndex type,
+PropertyIndex CreateProperties(ImageIndex image, TypeDefinitionIndex type,
                                std::span<MergePropertyDefinition> properties);
 
 /**

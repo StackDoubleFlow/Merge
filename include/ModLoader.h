@@ -2,6 +2,7 @@
 #include "CodeGenModuleBuilder.h"
 #include "MetadataBuilder.h"
 #include "ModReader.h"
+#include "TokenGenerator.h"
 
 struct Il2CppCodeRegistration;
 struct Il2CppMetadataRegistration;
@@ -30,6 +31,8 @@ public:
     static std::vector<CustomAttributesCacheGenerator> addedCACacheGenerators;
     static std::unordered_map<ImageIndex, CodeGenModuleBuilder>
         addedCodeGenModules;
+    static std::unordered_map<ImageIndex, TokenGenerator> tokenGenerators;
+    
 
     // Il2CppCodeRegistration.cpp
     static const Il2CppMetadataRegistration *g_MetadataRegistration;
