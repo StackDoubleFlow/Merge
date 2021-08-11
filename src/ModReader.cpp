@@ -28,8 +28,6 @@ void *ModReader::ReadFile(std::filesystem::path path) {
         MLogger::GetLogger().error("Error reading file at %s: %s", path.c_str(),
                                    strerror(errno));
         SAFE_ABORT();
-        // unreachable
-        return nullptr;
     }
 
     struct stat st;
@@ -55,8 +53,6 @@ MModInfo ModReader::ReadModInfo(std::filesystem::path path) {
         MLogger::GetLogger().error("Error reading file at %s: %s", path.c_str(),
                                    strerror(errno));
         SAFE_ABORT();
-        // unreachable
-        return MModInfo();
     }
 }
 

@@ -171,8 +171,6 @@ TypeDefinitionIndex MetadataBuilder::RedirectTypeDefinition(std::unordered_map<T
     }
     MLogger::GetLogger().error("Could not mod image containing mod type %i", modType);
     SAFE_ABORT();
-    // unreachable
-    return -1;
 }
 
 StringIndex MetadataBuilder::AppendString(const char *str) {

@@ -216,6 +216,7 @@ void ModLoader::FixupCodeRegistration(
         }
     }
 
+    MLogger::GetLogger().debug("Final modules:");
     for (const Il2CppCodeGenModule *module : codeGenModules) {
         MLogger::GetLogger().debug(" %p: %s", module, module->moduleName);
     }
