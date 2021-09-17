@@ -105,7 +105,7 @@ MethodIndex FindMethodDefinitionIndex(TypeDefinitionIndex typeIdx,
 Il2CppMethodDefinition GetMethodDefinition(MethodIndex idx);
 
 /**
- * Creates a zero indexed, single dimentional array type from a given element
+ * Creates a zero indexed, single dimensional array type from a given element
  * type.
  *
  * @param elementType The index of the element type.
