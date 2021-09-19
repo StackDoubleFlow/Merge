@@ -7,7 +7,10 @@
     "version": "0.2.2",
     "url": "https://github.com/StackDoubleFlow/Merge",
     "additionalData": {
-      "overrideSoName": "libmerge.so"
+      "overrideSoName": "libmerge.so",
+      "branchName": "version-v0.2.2",
+      "soLink": "https://github.com/StackDoubleFlow/Merge/releases/download/v0.2.2/libmerge.so",
+      "debugSoLink": "https://github.com/StackDoubleFlow/Merge/releases/download/v0.2.2/debug_libmerge.so"
     }
   },
   "dependencies": [
