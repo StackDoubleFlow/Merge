@@ -12,11 +12,15 @@ namespace Merge::API {
 struct MergeParameterDefinition {
     std::string name;
     TypeIndex type;
+    // See section "Flags for Params (22.1.12)" in il2cpp-tabledefs.h
+    uint16_t attrs;
 };
 
 struct MergeFieldDefinition {
     std::string name;
     TypeIndex type;
+    // See section "Field Attributes (21.1.5)" in il2cpp-tabledefs.h
+    uint16_t attrs;
 };
 
 struct MergePropertyDefinition {

@@ -73,6 +73,7 @@ MethodIndex merge_create_methods(ImageIndex image, TypeDefinitionIndex type,
             Merge::API::MergeParameterDefinition paramDef;
             paramDef.name = cParamDef.name;
             paramDef.type = cParamDef.type;
+            paramDef.attrs = cParamDef.attrs;
             params.push_back(paramDef);
         }
         methodDef.parameters = params;
@@ -95,6 +96,7 @@ FieldIndex merge_create_fields(ImageIndex image, TypeDefinitionIndex type,
         Merge::API::MergeFieldDefinition fieldDef;
         fieldDef.name = cFieldDef.name;
         fieldDef.name = cFieldDef.type;
+        fieldDef.attrs = cFieldDef.attrs;
         vec.push_back(fieldDef);
     }
     return Merge::API::CreateFields(image, type, std::span(vec));

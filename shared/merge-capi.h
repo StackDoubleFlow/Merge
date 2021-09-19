@@ -6,11 +6,13 @@
 struct MergeParameterDefinition {
     char *name;
     TypeIndex type;
+    uint16_t attrs;
 };
 
 struct MergeFieldDefinition {
     char *name;
     TypeIndex type;
+    uint16_t attrs;
 };
 
 struct MergePropertyDefinition {

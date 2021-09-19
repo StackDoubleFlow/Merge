@@ -44,7 +44,6 @@ Il2CppMethodDefinition GetMethodDefinition(MethodIndex idx) {
 }
 
 TypeIndex CreateSZArrayType(TypeIndex elementType) {
-    // TODO: Check to see if type already exists
     TypeIndex typeIdx = ModLoader::GetTypesCount();
     Il2CppType addedType;
     addedType.data.type = ModLoader::GetType(elementType);
@@ -56,7 +55,6 @@ TypeIndex CreateSZArrayType(TypeIndex elementType) {
 }
 
 TypeIndex CreatePointerType(TypeIndex type) {
-    // TODO: Check to see if type already exists
     TypeIndex typeIdx = ModLoader::GetTypesCount();
     Il2CppType addedType;
     addedType.data.type = ModLoader::GetType(type);
@@ -281,9 +279,17 @@ MethodIndex CreateMethods(ImageIndex image, TypeDefinitionIndex type,
         methodDef.returnType = method.returnType;
         methodDef.parameterStart = builder.parameters.size();
         for (auto &param : method.parameters) {
+            TypeIndex typeIdx = param.type;
+            Il2CppType type = *ModLoader::GetType(typeIdx);
+            if (type.attrs != param.attrs) {
+                typeIdx = ModLoader::GetTypesCount();
+                type.attrs = param.attrs;
+                ModLoader::addedTypes.push_back(new Il2CppType(type));
+            }
+
             Il2CppParameterDefinition paramDef;
             paramDef.nameIndex = builder.AppendString(param.name.c_str());
-            paramDef.typeIndex = param.type;
+            paramDef.typeIndex = typeIdx;
             paramDef.token =
                 ModLoader::tokenGenerators[image].GetNextParamToken();
         }
@@ -321,9 +327,17 @@ FieldIndex CreateFields(ImageIndex image, TypeDefinitionIndex type,
 
     FieldIndex startIdx = builder.fields.size();
     for (auto &field : fields) {
+        TypeIndex typeIdx = field.type;
+        Il2CppType type = *ModLoader::GetType(typeIdx);
+        if (type.attrs != field.attrs) {
+            typeIdx = ModLoader::GetTypesCount();
+            type.attrs = field.attrs;
+            ModLoader::addedTypes.push_back(new Il2CppType(type));
+        }
+
         Il2CppFieldDefinition fieldDef;
         fieldDef.nameIndex = builder.AppendString(field.name.c_str());
-        fieldDef.typeIndex = field.type;
+        fieldDef.typeIndex = typeIdx;
         fieldDef.token = ModLoader::tokenGenerators[image].GetNextFieldToken();
         builder.fields.push_back(fieldDef);
     }
