@@ -1,5 +1,5 @@
 #pragma once
-#ifdef TEST
+#ifdef MERGE_TEST
 #include <vector>
 
 struct MergeTests {
@@ -26,15 +26,17 @@ struct MergeTests {
             MergeTests::setupTests.push_back(Setup##name##Test);               \
         }                                                                      \
     };                                                                         \
-    void Load##name##Test()
+    static __Setup##name##Test_Struct __Setup##name##Test_Instance;            \
+    void Setup##name##Test()
 
 #define TEST_LOAD(name)                                                        \
     void Load##name##Test();                                                   \
     struct __Load##name##Test_Struct {                                         \
         __Load##name##Test_Struct() {                                          \
-            MergeTests::loadTests.push_back(Setup##name##Test);                \
+            MergeTests::loadTests.push_back(Load##name##Test);                \
         }                                                                      \
     };                                                                         \
+    static __Load##name##Test_Struct __Load##name##Test_Instance;              \
     void Load##name##Test()
 
 #endif

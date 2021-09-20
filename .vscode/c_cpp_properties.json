@@ -5,7 +5,7 @@
         "__GNUC__",
         "__aarch64__",
         "VERSION=\"0.0.0\"",
-        "TEST"
+        "MERGE_TEST"
       ],
       "includePath": [
         "${workspaceFolder}/include",

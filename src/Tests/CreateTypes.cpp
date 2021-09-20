@@ -1,4 +1,4 @@
-#ifdef TEST
+#ifdef MERGE_TEST
 #include "Tests.h"
 #include "Logger.h"
 #include "merge-api.h"
