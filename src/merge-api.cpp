@@ -165,6 +165,7 @@ Il2CppTypeDefinition CreateType(ImageIndex image,
 
     typeDef.interfacesStart = builder.interfaces.size();
     // Copy interfaces of parent
+    MLogger::GetLogger().debug("Parent interfaces count: %i", parentDef.interfaces_count);
     builder.interfaces.insert(
         builder.interfaces.end(),
         builder.interfaces.begin() + parentDef.interfacesStart,
@@ -174,7 +175,7 @@ Il2CppTypeDefinition CreateType(ImageIndex image,
     builder.interfaces.insert(builder.interfaces.end(), type.interfaces.begin(),
                               type.interfaces.end());
     typeDef.interfaces_count =
-        builder.interfaceOffsets.size() - typeDef.interfacesStart;
+        builder.interfaces.size() - typeDef.interfacesStart;
 
     typeDef.interfaceOffsetsStart = builder.interfaceOffsets.size();
     typeDef.interface_offsets_count = typeDef.interfaces_count;
