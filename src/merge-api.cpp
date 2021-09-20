@@ -69,7 +69,10 @@ AssemblyIndex CreateAssembly(std::string_view name) {
     MetadataBuilder &builder = ModLoader::metadataBuilder;
 
     Il2CppAssemblyDefinition assembly;
-    assembly.aname.nameIndex = builder.AppendString(name.data());
+    StringIndex nameIndex = builder.AppendString(name.data());
+    assembly.aname.nameIndex = nameIndex;
+    assembly.aname.cultureIndex = nameIndex;
+    assembly.aname.publicKeyIndex = nameIndex;
     assembly.imageIndex = -1;
     assembly.referencedAssemblyStart = -1;
     assembly.referencedAssemblyCount = 0;
