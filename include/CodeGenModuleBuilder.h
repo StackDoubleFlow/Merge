@@ -15,6 +15,7 @@ public:
 private:
     const char *moduleName;
     std::vector<Il2CppMethodPointer> methodPointers;
+    std::vector<Il2CppTokenAdjustorThunkPair> adjusterThunks;
     std::vector<int32_t> invokerIndices;
     std::vector<Il2CppTokenIndexMethodTuple> reversePInvokeWrapperIndices;
     std::vector<Il2CppTokenRangePair> rgctxRanges;

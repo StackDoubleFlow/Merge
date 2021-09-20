@@ -15,6 +15,8 @@ Il2CppCodeGenModule *CodeGenModuleBuilder::Finish() {
         new Il2CppCodeGenModule{moduleName,
                                 (uint32_t)methodPointers.size(),
                                 nullptr,
+                                (uint32_t)adjusterThunks.size(),
+                                nullptr,
                                 nullptr,
                                 (uint32_t)reversePInvokeWrapperIndices.size(),
                                 nullptr,
@@ -25,6 +27,7 @@ Il2CppCodeGenModule *CodeGenModuleBuilder::Finish() {
                                 nullptr};
 
     auto *modMethodPointers = new Il2CppMethodPointer[methodPointers.size()];
+    auto *modAdjusterThunks = new Il2CppTokenAdjustorThunkPair[adjusterThunks.size()];
     auto *modInvokerIndices = new int32_t[methodPointers.size()];
     auto *modReversePInvokeWrapperIndices =
         new Il2CppTokenIndexMethodTuple[reversePInvokeWrapperIndices.size()];
@@ -32,6 +35,7 @@ Il2CppCodeGenModule *CodeGenModuleBuilder::Finish() {
     auto *modRgctxs = new Il2CppRGCTXDefinition[rgctxs.size()];
 
     std::copy(methodPointers.begin(), methodPointers.end(), modMethodPointers);
+    std::copy(adjusterThunks.begin(), adjusterThunks.end(), modAdjusterThunks);
     std::copy(invokerIndices.begin(), invokerIndices.end(), modInvokerIndices);
     std::copy(reversePInvokeWrapperIndices.begin(),
               reversePInvokeWrapperIndices.end(),
@@ -40,6 +44,7 @@ Il2CppCodeGenModule *CodeGenModuleBuilder::Finish() {
     std::copy(rgctxs.begin(), rgctxs.end(), modRgctxs);
 
     mod->methodPointers = modMethodPointers;
+    mod->adjustorThunks = modAdjusterThunks;
     mod->invokerIndices = modInvokerIndices;
     mod->reversePInvokeWrapperIndices = modReversePInvokeWrapperIndices;
     mod->rgctxRanges = modRgctxRanges;
