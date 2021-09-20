@@ -1,9 +1,6 @@
 #include "Logger.h"
 #include "ModLoader.h"
-
-// temporary
-#include "merge-api.h"
-#include "beatsaber-hook/shared/utils/utils.h"
+#include "Tests.h"
 
 extern "C" void setup(ModInfo &info) {
     info.id = "Merge";
@@ -12,6 +9,14 @@ extern "C" void setup(ModInfo &info) {
 
     MLogger::GetLogger().info("Initializing Merge");
     ModLoader::Initialize();
+
+#ifdef TEST
+    MergeTests::SetupTests();
+#endif
 }
 
-extern "C" void load() {}
+extern "C" void load() {
+#ifdef TEST
+    MergeTests::LoadTests();
+#endif
+}

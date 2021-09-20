@@ -46,4 +46,5 @@ LOCAL_LDLIBS += -llog
 LOCAL_CFLAGS += -I"include" -I"shared" -I"./extern/libil2cpp/il2cpp/libil2cpp" -isystem"extern" -DVERSION='"0.0.0"'
 LOCAL_CPPFLAGS += -std=c++2a
 LOCAL_C_INCLUDES += ./include ./src
+# LOACL_CFLAGS += -DTEST
 include $(BUILD_SHARED_LIBRARY)

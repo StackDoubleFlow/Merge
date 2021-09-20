@@ -4,7 +4,8 @@
       "defines": [
         "__GNUC__",
         "__aarch64__",
-        "VERSION=\"0.0.0\""
+        "VERSION=\"0.0.0\"",
+        "TEST"
       ],
       "includePath": [
         "${workspaceFolder}/include",
