@@ -3,9 +3,8 @@
 #include "Mem.h"
 #include "MetadataBuilder.h"
 #include "XRefHelper.h"
+#define IL2CPP_FUNC_VISIBILITY public
 #include "beatsaber-hook/shared/utils/hooking.hpp"
-#include "beatsaber-hook/shared/utils/il2cpp-functions.hpp"
-#include "beatsaber-hook/shared/utils/utils.h"
 
 MAKE_HOOK(MetadataCache_Register, nullptr, void,
           Il2CppCodeRegistration *codeRegistration,
@@ -51,19 +50,19 @@ void ModLoader::Initialize() {
     il2cpp_functions::Init();
     XRefHelper xref;
 
-    xref.Init(HookTracker::GetOrig(il2cpp_functions::init));
+    xref.Init(HookTracker::GetOrig(il2cpp_functions::il2cpp_init));
     // Runtime::Init
-    int32_t *Runtime_Init = xref.bl(2);
+    const uint32_t *Runtime_Init = xref.bl<2>();
     // MetadataCache::Initialize
-    xref.bl(9, 1);
+    xref.bl<9, 1>();
     // MetadataLoader::LoadMetadataFile
-    int32_t *MetadataLoader_LoadMetadataFile = xref.bl(1);
+    xref.bl<1>();
     INSTALL_HOOK_DIRECT(logger, MetadataLoader_LoadMetadataFile,
-                        MetadataLoader_LoadMetadataFile);
+                        xref.hookable());
 
     xref.Init(Runtime_Init);
     // RegisterRuntimeInitializeAndCleanup::ExecuteInitializations
-    xref.bl(8, 1);
+    xref.bl<8, 1>();
     // static std::set<void (*)()>* il2cpp::utils::_registrationCallbacks
     auto *registrationCallbacks = *xref.pcRelData<std::set<void (*)()> *>();
     // registrationCallbacks should have one item in it:
@@ -75,13 +74,13 @@ void ModLoader::Initialize() {
     // il2cpp_codegen_register
     xref.b();
     // MetadataCache::Register
-    int32_t *MetadataCache_Register = xref.b();
-    INSTALL_HOOK_DIRECT(logger, MetadataCache_Register, MetadataCache_Register);
+    xref.b();
+    INSTALL_HOOK_DIRECT(logger, MetadataCache_Register, xref.hookable());
 
     xref.Init(s_Il2CppCodegenRegistration);
-    g_MetadataRegistration = *xref.pcRelData<Il2CppMetadataRegistration *>(1);
-    g_CodeRegistration = xref.pcRelData<Il2CppCodeRegistration>(2);
-    s_Il2CppCodeGenOptions = xref.pcRelData<Il2CppCodeGenOptions>(3);
+    g_MetadataRegistration = *xref.pcRelData<Il2CppMetadataRegistration *, 1>();
+    g_CodeRegistration = xref.pcRelData<Il2CppCodeRegistration, 2>();
+    s_Il2CppCodeGenOptions = xref.pcRelData<Il2CppCodeGenOptions, 3>();
 
     rawMods = ModReader::ReadAllMods();
     void *baseMetadata = ModReader::ReadBaseMetadata();
@@ -157,9 +156,9 @@ void ModLoader::FixupCodeRegistration(
 
         xref.Init(dlsym(rawMod.codeHandle, "il2cpp_init"));
         // Runtime::Init
-        int32_t *Runtime_Init = xref.bl(2);
+        xref.bl<2>();
         // RegisterRuntimeInitializeAndCleanup::ExecuteInitializations
-        xref.bl(8, 1);
+        xref.bl<8, 1>();
         // static std::set<void (*)()>* il2cpp::utils::_registrationCallbacks
         auto *registrationCallbacks = *xref.pcRelData<std::set<void (*)()> *>();
         // registrationCallbacks should have one item in it:
@@ -169,9 +168,9 @@ void ModLoader::FixupCodeRegistration(
 
         xref.Init(s_Il2CppCodegenRegistration);
         auto *g_MetadataRegistration =
-            *xref.pcRelData<Il2CppMetadataRegistration *>(1);
-        auto *g_CodeRegistration = xref.pcRelData<Il2CppCodeRegistration>(2);
-        auto *s_Il2CppCodeGenOptions = xref.pcRelData<Il2CppCodeGenOptions>(3);
+            *xref.pcRelData<Il2CppMetadataRegistration *, 1>();
+        auto *g_CodeRegistration = xref.pcRelData<Il2CppCodeRegistration, 2>();
+        auto *s_Il2CppCodeGenOptions = xref.pcRelData<Il2CppCodeGenOptions, 3>();
 
         rawMod.runtimeMetadataTypeOffset = types.size();
         MLogger::GetLogger().debug("Adding %i types to runtime metadata type "

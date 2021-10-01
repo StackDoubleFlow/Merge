@@ -13,12 +13,17 @@
   "dependencies": [
     {
       "id": "beatsaber-hook",
-      "versionRange": "^2.3.1",
+      "versionRange": "^3.0.0",
       "additionalData": {
         "extraFiles": [
           "src/inline-hook"
         ]
       }
+    },
+    {
+      "id": "capstone",
+      "versionRange": "^0.1.0",
+      "additionalData": {}
     }
   ],
   "additionalData": {}

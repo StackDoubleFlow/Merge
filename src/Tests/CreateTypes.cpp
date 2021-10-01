@@ -10,7 +10,6 @@ TEST_SETUP(CreateTypes) {
     auto logger = MLogger::GetLogger().WithContext("TestCreateTypes");
     logger.debug("Setting up test");
 
-    TypeDefinitionIndex voidIdx = CRASH_UNLESS(FindTypeDefinitionIndex("System", "Void"));
     TypeDefinitionIndex objectIdx = CRASH_UNLESS(FindTypeDefinitionIndex("System", "Object"));
 
     AssemblyIndex assembly = CreateAssembly("CreateTypesTest");
