@@ -44,7 +44,7 @@ LOCAL_SHARED_LIBRARIES += modloader
 LOCAL_SHARED_LIBRARIES += beatsaber-hook_3_0_6
 LOCAL_LDLIBS += -llog
 LOCAL_CFLAGS += -I"include" -I"shared" -I"./extern/libil2cpp/il2cpp/libil2cpp" -isystem"extern" -DVERSION='"0.0.0"' -DID='"Merge"'
-LOCAL_CFLAGS += -DMERGE_TEST
+# LOCAL_CFLAGS += -DMERGE_TEST
 LOCAL_CPPFLAGS += -std=c++2a
 LOCAL_C_INCLUDES += ./include ./src
 include $(BUILD_SHARED_LIBRARY)
