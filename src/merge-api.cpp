@@ -168,7 +168,8 @@ Il2CppTypeDefinition CreateType(ImageIndex image,
 
     typeDef.interfacesStart = builder.interfaces.size();
     // Copy interfaces of parent
-    MLogger::GetLogger().debug("Parent interfaces count: %i", parentDef.interfaces_count);
+    MLogger::GetLogger().debug("Parent interfaces count: %i",
+                               parentDef.interfaces_count);
     builder.interfaces.insert(
         builder.interfaces.end(),
         builder.interfaces.begin() + parentDef.interfacesStart,
@@ -485,6 +486,17 @@ void SetCustomAttributes(ImageIndex imageIdx,
               builder.attributesInfo.begin() + image.customAttributeStart +
                   image.customAttributeCount,
               CARangeTokenComparer);
+}
+
+void OffsetSize(TypeDefinitionIndex type, int32_t sizeOffset) {
+    MLogger::GetLogger().debug("Adding size %i to type definition idx %i",
+                               sizeOffset, type);
+    auto itr = ModLoader::sizeOffsets.find(type);
+    if (itr != ModLoader::sizeOffsets.end()) {
+        itr->second += sizeOffset;
+    } else {
+        ModLoader::sizeOffsets[type] = sizeOffset;
+    }
 }
 
 } // end namespace Merge::API

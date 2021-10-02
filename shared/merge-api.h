@@ -232,4 +232,16 @@ void SetMethodOverrides(TypeDefinitionIndex type,
 void SetCustomAttributes(ImageIndex image,
                          std::span<MergeCustomAttributeTarget> targets);
 
+/**
+ * Offsets the size of a type definition. This can be useful for custom c++
+ * fields or anything extra that il2cpp cannot calculate itself.
+ *
+ * It can also subtract the size but that sounds like it can go horribly
+ * wrongly.
+ *
+ * @param type The type defintion to modify.
+ * @param sizeOffset The amount of bytes to offset the size by.
+ */
+void OffsetSize(TypeDefinitionIndex type, int32_t sizeOffset);
+
 } // end namespace Merge::API

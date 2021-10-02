@@ -38,6 +38,7 @@ public:
     uint32_t *hookable() {
         return const_cast<uint32_t *>(addr);
     }
+
 private:
     const uint32_t *addr;
 };

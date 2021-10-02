@@ -6,6 +6,11 @@
 #define IL2CPP_FUNC_VISIBILITY public
 #include "beatsaber-hook/shared/utils/hooking.hpp"
 
+template<typename T>
+static T MetadataSection(const void* metadata, size_t sectionOffset) {
+    return reinterpret_cast<T>(reinterpret_cast<const uint8_t*>(metadata) + sectionOffset);
+}
+
 MAKE_HOOK(MetadataCache_Register, nullptr, void,
           Il2CppCodeRegistration *codeRegistration,
           Il2CppMetadataRegistration *metadataRegistration,
@@ -26,6 +31,32 @@ MAKE_HOOK(MetadataLoader_LoadMetadataFile, nullptr, void *,
     return ModLoader::CreateNewMetadata();
 }
 
+MAKE_HOOK(SetupFieldsLocked, nullptr, void, Il2CppClass *klass, void *lock) {
+    bool sizeInited = klass->size_inited;
+
+    SetupFieldsLocked(klass, lock);
+
+    if (sizeInited && klass->typeDefinition) {
+        return;
+    }
+    il2cpp_functions::CheckS_GlobalMetadata();
+
+    auto *metadata =
+        static_cast<const char *>(il2cpp_functions::s_GlobalMetadata);
+    size_t sectionOffset = il2cpp_functions::s_GlobalMetadataHeader->typeDefinitionsOffset;
+
+    auto *typeDefinitions = MetadataSection<const Il2CppTypeDefinition *>(metadata, sectionOffset);
+
+    ptrdiff_t diff = klass->typeDefinition - typeDefinitions;
+    auto idx = static_cast<TypeDefinitionIndex>(diff);
+
+    auto itr = ModLoader::sizeOffsets.find(idx);
+    if (itr != ModLoader::sizeOffsets.end()) {
+        klass->actualSize += itr->second;
+        klass->instance_size += itr->second;
+    }
+}
+
 std::vector<RawMod> ModLoader::rawMods;
 bool ModLoader::initialized;
 
@@ -40,6 +71,8 @@ std::unordered_map<ImageIndex, TokenGenerator> ModLoader::tokenGenerators;
 const Il2CppMetadataRegistration *ModLoader::g_MetadataRegistration;
 const Il2CppCodeRegistration *ModLoader::g_CodeRegistration;
 const Il2CppCodeGenOptions *ModLoader::s_Il2CppCodeGenOptions;
+
+std::unordered_map<TypeDefinitionIndex, int32_t> ModLoader::sizeOffsets;
 
 void ModLoader::Initialize() {
     if (initialized)
@@ -93,6 +126,20 @@ void ModLoader::Initialize() {
                                        rawMod.modInfo.assemblyName,
                                        rawMod.runtimeMetadataTypeOffset);
     }
+
+    xref.Init(HookTracker::GetOrig(il2cpp_functions::il2cpp_object_new));
+    // Object::New
+    xref.bl();
+    // Object::NewAllocSpecific
+    xref.b();
+    // Class::Init
+    xref.bl();
+    // InitLocked
+    xref.bl<2>();
+    // SetupFieldsLocked
+    xref.bl<9>();
+    INSTALL_HOOK_DIRECT(logger, SetupFieldsLocked, xref.hookable());
+
 
     initialized = true;
 }

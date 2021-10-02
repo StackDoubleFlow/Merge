@@ -10,7 +10,8 @@ TEST_SETUP(CreateTypes) {
     auto logger = MLogger::GetLogger().WithContext("TestCreateTypes");
     logger.debug("Setting up test");
 
-    TypeDefinitionIndex objectIdx = CRASH_UNLESS(FindTypeDefinitionIndex("System", "Object"));
+    TypeDefinitionIndex objectIdx = FindTypeDefinitionIndex("System", "Object");
+    CRASH_UNLESS(objectIdx >= 0);
 
     AssemblyIndex assembly = CreateAssembly("CreateTypesTest");
     ImageIndex image = CreateImage(assembly, "CreateTypesTest.dll");

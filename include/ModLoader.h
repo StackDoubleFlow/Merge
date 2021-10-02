@@ -33,9 +33,10 @@ public:
         addedCodeGenModules;
     static std::unordered_map<ImageIndex, TokenGenerator> tokenGenerators;
     
-
     // Il2CppCodeRegistration.cpp
     static const Il2CppMetadataRegistration *g_MetadataRegistration;
     static const Il2CppCodeRegistration *g_CodeRegistration;
     static const Il2CppCodeGenOptions *s_Il2CppCodeGenOptions;
+
+    static std::unordered_map<TypeDefinitionIndex, int32_t> sizeOffsets;
 };
