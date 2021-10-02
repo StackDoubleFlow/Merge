@@ -237,7 +237,7 @@ void SetCustomAttributes(ImageIndex image,
  * fields or anything extra that il2cpp cannot calculate itself.
  *
  * It can also subtract the size, but that sounds like it can go horribly
- * wrong so I wouldn't recommend it.
+ * wrong, so I wouldn't recommend it.
  *
  * @param type The type defintion to modify.
  * @param sizeOffset The amount of bytes to offset the size by.
