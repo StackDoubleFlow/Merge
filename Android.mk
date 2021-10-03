@@ -24,11 +24,11 @@ LOCAL_MODULE := modloader
 LOCAL_EXPORT_C_INCLUDES := extern/modloader
 LOCAL_SRC_FILES := extern/libmodloader.so
 include $(PREBUILT_SHARED_LIBRARY)
-# Creating prebuilt for dependency: beatsaber-hook - version: 3.0.6
+# Creating prebuilt for dependency: beatsaber-hook - version: 3.0.7
 include $(CLEAR_VARS)
-LOCAL_MODULE := beatsaber-hook_3_0_6
+LOCAL_MODULE := beatsaber-hook_3_0_7
 LOCAL_EXPORT_C_INCLUDES := extern/beatsaber-hook
-LOCAL_SRC_FILES := extern/libbeatsaber-hook_3_0_6.so
+LOCAL_SRC_FILES := extern/libbeatsaber-hook_3_0_7.so
 LOCAL_CPP_FEATURES += exceptions
 include $(PREBUILT_SHARED_LIBRARY)
 
@@ -41,10 +41,10 @@ LOCAL_SRC_FILES += $(call rwildcard,src/,*.cpp)
 LOCAL_SRC_FILES += $(call rwildcard,extern/beatsaber-hook/src/inline-hook,*.cpp)
 LOCAL_SRC_FILES += $(call rwildcard,extern/beatsaber-hook/src/inline-hook,*.c)
 LOCAL_SHARED_LIBRARIES += modloader
-LOCAL_SHARED_LIBRARIES += beatsaber-hook_3_0_6
+LOCAL_SHARED_LIBRARIES += beatsaber-hook_3_0_7
 LOCAL_LDLIBS += -llog
 LOCAL_CFLAGS += -I"include" -I"shared" -I"./extern/libil2cpp/il2cpp/libil2cpp" -isystem"extern" -DVERSION='"0.0.0"' -DID='"Merge"'
-# LOCAL_CFLAGS += -DMERGE_TEST
 LOCAL_CPPFLAGS += -std=c++2a
 LOCAL_C_INCLUDES += ./include ./src
+# LOCAL_CFLAGS += -DMERGE_TEST
 include $(BUILD_SHARED_LIBRARY)
