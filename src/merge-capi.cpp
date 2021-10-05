@@ -1,5 +1,6 @@
 #include "merge-capi.h"
 #include "merge-api.h"
+#include "vector"
 
 void merge_initialize();
 
@@ -8,7 +9,7 @@ TypeDefinitionIndex merge_find_type_definition_index(char *namespaze,
     return Merge::API::FindTypeDefinitionIndex(namespaze, name);
 }
 
-Il2CppTypeDefinition merge_get_type_definition(TypeDefinitionIndex idx) {
+Il2CppTypeDefinition *merge_get_type_definition(TypeDefinitionIndex idx) {
     return Merge::API::GetTypeDefinition(idx);
 }
 
@@ -52,8 +53,7 @@ TypeDefinitionIndex merge_create_types(ImageIndex image,
         typeDef.typeEnum = cTypeDef.typeEnum;
         typeDef.valueType = cTypeDef.valueType;
         typeDef.interfaces =
-            std::vector(cTypeDef.interfaces,
-                        cTypeDef.interfaces + cTypeDef.interfacesCount);
+            std::span(cTypeDef.interfaces, cTypeDef.interfacesCount);
         vec.push_back(typeDef);
     }
     return Merge::API::CreateTypes(image, std::span(vec));
@@ -95,7 +95,7 @@ FieldIndex merge_create_fields(ImageIndex image, TypeDefinitionIndex type,
         MergeFieldDefinition &cFieldDef = fields[i];
         Merge::API::MergeFieldDefinition fieldDef;
         fieldDef.name = cFieldDef.name;
-        fieldDef.name = cFieldDef.type;
+        fieldDef.type = cFieldDef.type;
         fieldDef.attrs = cFieldDef.attrs;
         vec.push_back(fieldDef);
     }
@@ -132,4 +132,17 @@ void merge_set_method_overrides(TypeDefinitionIndex type,
         map.insert(std::make_pair(overridingMethods[i], virtualMethods[i]));
     }
     Merge::API::SetMethodOverrides(type, map);
+}
+
+void merge_set_custom_attributes(ImageIndex image,
+                                 MergeCustomAttributeTarget *targets,
+                                 uint32_t targetsCount) {
+    auto span = std::span(
+        reinterpret_cast<Merge::API::MergeCustomAttributeTarget *>(targets),
+        targetsCount);
+    Merge::API::SetCustomAttributes(image, span);
+}
+
+void merge_offset_size(TypeDefinitionIndex type, int32_t sizeOffset) {
+    Merge::API::OffsetSize(type, sizeOffset);
 }

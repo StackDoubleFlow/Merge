@@ -3,36 +3,35 @@
 #include "il2cpp-class-internals.h"
 #include "il2cpp-metadata.h"
 #include <span>
-#include <string>
+#include <string_view>
 #include <unordered_map>
-#include <vector>
 
 namespace Merge::API {
 
 struct MergeParameterDefinition {
-    std::string name;
+    std::string_view name;
     TypeIndex type;
     // See section "Flags for Params (22.1.12)" in il2cpp-tabledefs.h
     uint16_t attrs;
 };
 
 struct MergeFieldDefinition {
-    std::string name;
+    std::string_view name;
     TypeIndex type;
     // See section "Field Attributes (21.1.5)" in il2cpp-tabledefs.h
     uint16_t attrs;
 };
 
 struct MergePropertyDefinition {
-    std::string name;
+    std::string_view name;
     MethodIndex get;
     MethodIndex set;
     uint32_t attrs;
 };
 
 struct MergeMethodDefinition {
-    std::string name;
-    std::vector<MergeParameterDefinition> parameters;
+    std::string_view name;
+    std::span<MergeParameterDefinition> parameters;
     TypeIndex returnType;
     Il2CppMethodPointer methodPointer;
     InvokerMethod invoker;
@@ -41,13 +40,13 @@ struct MergeMethodDefinition {
 };
 
 struct MergeTypeDefinition {
-    std::string namespaze;
-    std::string name;
+    std::string_view namespaze;
+    std::string_view name;
     TypeIndex parent;
     uint16_t attrs;
     Il2CppTypeEnum typeEnum;
     bool valueType;
-    std::vector<TypeIndex> interfaces;
+    std::span<TypeIndex> interfaces;
 };
 
 enum struct AttributeTarget {
@@ -64,7 +63,7 @@ struct MergeCustomAttributeTarget {
     AttributeTarget targetType;
     uint32_t targetIdx;
     CustomAttributesCacheGenerator generator;
-    std::vector<TypeIndex> attributes;
+    std::span<TypeIndex> attributes;
 };
 
 /// Initialize Merge and its API. Call this before anything else.
@@ -86,7 +85,7 @@ TypeDefinitionIndex FindTypeDefinitionIndex(std::string_view namespaze,
  * @param idx The index of the type definition.
  * @return A copy of the type definition.
  */
-Il2CppTypeDefinition GetTypeDefinition(TypeDefinitionIndex idx);
+Il2CppTypeDefinition *GetTypeDefinition(TypeDefinitionIndex idx);
 
 /**
  * Finds an existing method definition in the metadata.

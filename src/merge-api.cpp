@@ -18,8 +18,8 @@ TypeDefinitionIndex FindTypeDefinitionIndex(std::string_view namespaze,
     }
 }
 
-Il2CppTypeDefinition GetTypeDefinition(TypeDefinitionIndex idx) {
-    return ModLoader::metadataBuilder.typeDefinitions[idx];
+Il2CppTypeDefinition *GetTypeDefinition(TypeDefinitionIndex idx) {
+    return &ModLoader::metadataBuilder.typeDefinitions[idx];
 }
 
 MethodIndex FindMethodDefinitionIndex(TypeDefinitionIndex typeIdx,
@@ -129,8 +129,8 @@ Il2CppTypeDefinition CreateType(ImageIndex image,
     TypeDefinitionIndex idx = builder.typeDefinitions.size();
 
     Il2CppTypeDefinition typeDef;
-    typeDef.nameIndex = builder.AppendString(type.name.c_str());
-    typeDef.namespaceIndex = builder.AppendString(type.namespaze.c_str());
+    typeDef.nameIndex = builder.AppendString(type.name.data());
+    typeDef.namespaceIndex = builder.AppendString(type.namespaze.data());
     typeDef.byvalTypeIndex = ModLoader::GetTypesCount();
     Il2CppType addedType;
     addedType.data.klassIndex = idx;
@@ -234,7 +234,7 @@ TypeDefinitionIndex CreateTypes(ImageIndex image,
         Il2CppTypeDefinition typeDef = CreateType(image, type);
         logger.debug(
             "Creating type %s.%s, interfaces count: %hi, vtable size: %hi",
-            type.namespaze.c_str(), type.name.c_str(), typeDef.interfaces_count,
+            type.namespaze.data(), type.name.data(), typeDef.interfaces_count,
             typeDef.vtable_count);
         builder.typeDefinitions.push_back(typeDef);
     }
@@ -260,7 +260,7 @@ TypeDefinitionIndex AppendTypes(std::span<MergeTypeDefinition> types) {
         Il2CppTypeDefinition typeDef = CreateType(image, type);
         logger.debug(
             "Appending type %s.%s, interfaces count: %hi, vtable size: %hi",
-            type.namespaze.c_str(), type.name.c_str(), typeDef.interfaces_count,
+            type.namespaze.data(), type.name.data(), typeDef.interfaces_count,
             typeDef.vtable_count);
         builder.typeDefinitions.push_back(typeDef);
     }
@@ -279,7 +279,7 @@ MethodIndex CreateMethods(ImageIndex image, TypeDefinitionIndex type,
     MethodIndex startIdx = builder.methods.size();
     for (auto &method : methods) {
         Il2CppMethodDefinition methodDef;
-        methodDef.nameIndex = builder.AppendString(method.name.c_str());
+        methodDef.nameIndex = builder.AppendString(method.name.data());
         methodDef.declaringType = type;
         methodDef.returnType = method.returnType;
         methodDef.parameterStart = builder.parameters.size();
@@ -293,7 +293,7 @@ MethodIndex CreateMethods(ImageIndex image, TypeDefinitionIndex type,
             }
 
             Il2CppParameterDefinition paramDef;
-            paramDef.nameIndex = builder.AppendString(param.name.c_str());
+            paramDef.nameIndex = builder.AppendString(param.name.data());
             paramDef.typeIndex = typeIdx;
             paramDef.token =
                 ModLoader::tokenGenerators[image].GetNextParamToken();
@@ -312,7 +312,7 @@ MethodIndex CreateMethods(ImageIndex image, TypeDefinitionIndex type,
         builder.methods.push_back(methodDef);
         int32_t invokerIdx = ModLoader::GetInvokersCount();
         ModLoader::addedInvokers.push_back(method.invoker);
-        logger.debug("Adding method %s, RID: %i", method.name.c_str(), rid);
+        logger.debug("Adding method %s, RID: %i", method.name.data(), rid);
         moduleBuilder.AppendMethod(method.methodPointer, invokerIdx);
 
         Il2CppTypeDefinition &typeDef = builder.typeDefinitions[type];
@@ -341,7 +341,7 @@ FieldIndex CreateFields(ImageIndex image, TypeDefinitionIndex type,
         }
 
         Il2CppFieldDefinition fieldDef;
-        fieldDef.nameIndex = builder.AppendString(field.name.c_str());
+        fieldDef.nameIndex = builder.AppendString(field.name.data());
         fieldDef.typeIndex = typeIdx;
         fieldDef.token = ModLoader::tokenGenerators[image].GetNextFieldToken();
         builder.fields.push_back(fieldDef);
@@ -357,7 +357,7 @@ PropertyIndex CreateProperties(ImageIndex image, TypeDefinitionIndex type,
     PropertyIndex startIdx = builder.properties.size();
     for (auto &prop : properties) {
         Il2CppPropertyDefinition propDef;
-        propDef.nameIndex = builder.AppendString(prop.name.c_str());
+        propDef.nameIndex = builder.AppendString(prop.name.data());
         propDef.get = prop.get;
         propDef.set = prop.set;
         propDef.attrs = prop.attrs;
