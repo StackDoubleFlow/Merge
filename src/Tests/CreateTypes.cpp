@@ -19,7 +19,7 @@ TEST_SETUP(CreateTypes) {
     MergeTypeDefinition poggersDef;
     poggersDef.name = "Poggers";
     poggersDef.namespaze = "Gaming";
-    poggersDef.parent = GetTypeDefinition(objectIdx).byvalTypeIndex;
+    poggersDef.parent = GetTypeDefinition(objectIdx)->byvalTypeIndex;
     poggersDef.attrs = 0;
     poggersDef.typeEnum = IL2CPP_TYPE_CLASS;
     poggersDef.valueType = false;
