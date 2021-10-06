@@ -8,7 +8,7 @@ This library is released to [QPM](https://github.com/sc2ad/QuestPackageManager).
 Simply add and restore the dependency like so:
 
 ```bash
-qpm dependency add "Merge"
+qpm dependency add "merge"
 qpm restore
 ```
 
