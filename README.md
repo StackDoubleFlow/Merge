@@ -12,6 +12,10 @@ qpm dependency add "merge"
 qpm restore
 ```
 
+## Platform Support
+
+Merge is intended to be used for IL2CPP 24.5 (Unity 2019.4.21-2019.4.x) on AArch64. Functionalily on other platforms is not guaranteed. 
+
 ## Example
 
 ```c++
