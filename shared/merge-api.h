@@ -70,44 +70,6 @@ struct MergeCustomAttributeTarget {
 void Initialize();
 
 /**
- * Finds an existing type definition in the metadata.
- *
- * @param namespaze The namespace of the type.
- * @param name The name of the type.
- * @return The index of the type definition of it was found, otherwise -1
- */
-TypeDefinitionIndex FindTypeDefinitionIndex(std::string_view namespaze,
-                                            std::string_view name);
-
-/**
- * Gets an existing type definition from the metadata at the specified index.
- *
- * @param idx The index of the type definition.
- * @return A copy of the type definition.
- */
-Il2CppTypeDefinition *GetTypeDefinition(TypeDefinitionIndex idx);
-
-/**
- * Finds an existing method definition in the metadata.
- *
- * @param type The type to look in.
- * @param name The name of the method.
- * @param paramCount The number of parameters the method has.
- * @return The index of the method definition of it was found, otherwise -1
- */
-MethodIndex FindMethodDefinitionIndex(TypeDefinitionIndex typeIdx,
-                                      std::string_view name,
-                                      uint16_t paramCount);
-
-/**
- * Gets an existing method definition from the metadata at the specified index.
- *
- * @param idx The index of the method definition.
- * @return A copy of the method definition.
- */
-Il2CppMethodDefinition GetMethodDefinition(MethodIndex idx);
-
-/**
  * Creates a zero indexed, single dimensional array type from a given element
  * type.
  *
@@ -135,6 +97,22 @@ TypeIndex CreatePointerType(TypeIndex type);
 AssemblyIndex CreateAssembly(std::string_view name);
 
 /**
+ * Finds an existing assembly in the metadata.
+ *
+ * @param name The name of the assembly.
+ * @return The index of the assembly of it was found, otherwise -1
+ */
+AssemblyIndex FindAssemblyIndex(std::string_view name);
+
+/**
+ * Gets an existing assembly definition from the metadata at the specified index.
+ *
+ * @param idx The index of the assembly definition.
+ * @return A pointer to the assembly definition.
+ */
+Il2CppAssemblyDefinition *GetAssemblyDefinition(AssemblyIndex idx);
+
+/**
  * Creates an image and links it to the assembly.
  *
  * @param assembly The assembly to link to.
@@ -142,6 +120,14 @@ AssemblyIndex CreateAssembly(std::string_view name);
  * @return Index of the image created.
  */
 ImageIndex CreateImage(AssemblyIndex assembly, std::string_view name);
+
+/**
+ * Gets an existing image definition from the metadata at the specified index.
+ *
+ * @param idx The index of the image definition.
+ * @return A pointer to the image definition.
+ */
+Il2CppImageDefinition *GetImageDefinition(ImageIndex idx);
 
 /**
  * Creates type definitions in the image.
@@ -162,6 +148,24 @@ TypeDefinitionIndex CreateTypes(ImageIndex image,
 TypeDefinitionIndex AppendTypes(std::span<MergeTypeDefinition> types);
 
 /**
+ * Finds an existing type definition in the metadata.
+ *
+ * @param namespaze The namespace of the type.
+ * @param name The name of the type.
+ * @return The index of the type definition of it was found, otherwise -1
+ */
+TypeDefinitionIndex FindTypeDefinitionIndex(std::string_view namespaze,
+                                            std::string_view name);
+
+/**
+ * Gets an existing type definition from the metadata at the specified index.
+ *
+ * @param idx The index of the type definition.
+ * @return A pointer to the type definition.
+ */
+Il2CppTypeDefinition *GetTypeDefinition(TypeDefinitionIndex idx);
+
+/**
  * Creates methods in a type.
  *
  * @param image The image of the type.
@@ -171,6 +175,26 @@ TypeDefinitionIndex AppendTypes(std::span<MergeTypeDefinition> types);
  */
 MethodIndex CreateMethods(ImageIndex image, TypeDefinitionIndex type,
                           std::span<MergeMethodDefinition> methods);
+
+/**
+ * Finds an existing method definition in the metadata.
+ *
+ * @param type The type to look in.
+ * @param name The name of the method.
+ * @param paramCount The number of parameters the method has.
+ * @return The index of the method definition of it was found, otherwise -1
+ */
+MethodIndex FindMethodDefinitionIndex(TypeDefinitionIndex typeIdx,
+                                      std::string_view name,
+                                      uint16_t paramCount);
+
+/**
+ * Gets an existing method definition from the metadata at the specified index.
+ *
+ * @param idx The index of the method definition.
+ * @return A pointer to the method definition.
+ */
+Il2CppMethodDefinition GetMethodDefinition(MethodIndex idx);
 
 /**
  * Creates fields in a type.

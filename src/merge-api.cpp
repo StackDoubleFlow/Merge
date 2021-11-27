@@ -7,42 +7,6 @@ namespace Merge::API {
 
 void Initialize() { ModLoader::Initialize(); }
 
-TypeDefinitionIndex FindTypeDefinitionIndex(std::string_view namespaze,
-                                            std::string_view name) {
-    auto td = ModLoader::metadataBuilder.FindTypeDefinition(namespaze.data(),
-                                                            name.data());
-    if (td) {
-        return *td;
-    } else {
-        return -1;
-    }
-}
-
-Il2CppTypeDefinition *GetTypeDefinition(TypeDefinitionIndex idx) {
-    return &ModLoader::metadataBuilder.typeDefinitions[idx];
-}
-
-MethodIndex FindMethodDefinitionIndex(TypeDefinitionIndex typeIdx,
-                                      std::string_view name,
-                                      uint16_t paramCount) {
-    MetadataBuilder &builder = ModLoader::metadataBuilder;
-
-    Il2CppTypeDefinition &type = builder.typeDefinitions[typeIdx];
-    for (size_t i = 0; i < type.method_count; i++) {
-        Il2CppMethodDefinition &method = builder.methods[type.methodStart + i];
-        if (name == &builder.string[method.nameIndex] &&
-            method.parameterCount == paramCount) {
-            return type.methodStart + i;
-        }
-    }
-
-    return -1;
-}
-
-Il2CppMethodDefinition GetMethodDefinition(MethodIndex idx) {
-    return ModLoader::metadataBuilder.methods[idx];
-}
-
 TypeIndex CreateSZArrayType(TypeIndex elementType) {
     TypeIndex typeIdx = ModLoader::GetTypesCount();
     Il2CppType addedType;
@@ -84,6 +48,23 @@ AssemblyIndex CreateAssembly(std::string_view name) {
     return idx;
 }
 
+AssemblyIndex FindAssemblyIndex(std::string_view name) {
+    MetadataBuilder &builder = ModLoader::metadataBuilder;
+
+    for (AssemblyIndex i = 0; i < builder.assemblies.size(); i++) {
+        Il2CppAssemblyDefinition &assembly = builder.assemblies[i];
+        std::string_view assemblyName = &builder.string[assembly.aname.nameIndex];
+        if (name == assemblyName) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+Il2CppAssemblyDefinition *GetAssemblyDefinition(AssemblyIndex idx) {
+    return &ModLoader::metadataBuilder.assemblies[idx];
+}
+
 ImageIndex CreateImage(AssemblyIndex assemblyIdx, std::string_view name) {
     MetadataBuilder &builder = ModLoader::metadataBuilder;
     char *cname = new char[name.size() + 1];
@@ -110,6 +91,10 @@ ImageIndex CreateImage(AssemblyIndex assemblyIdx, std::string_view name) {
     ModLoader::addedCodeGenModules.emplace(idx, cname);
 
     return idx;
+}
+
+Il2CppImageDefinition *GetImageDefinition(ImageIndex idx) {
+    return &ModLoader::metadataBuilder.images[idx];
 }
 
 namespace {
@@ -269,6 +254,21 @@ TypeDefinitionIndex AppendTypes(std::span<MergeTypeDefinition> types) {
     return startIdx;
 }
 
+TypeDefinitionIndex FindTypeDefinitionIndex(std::string_view namespaze,
+                                            std::string_view name) {
+    auto td = ModLoader::metadataBuilder.FindTypeDefinition(namespaze.data(),
+                                                            name.data());
+    if (td) {
+        return *td;
+    } else {
+        return -1;
+    }
+}
+
+Il2CppTypeDefinition *GetTypeDefinition(TypeDefinitionIndex idx) {
+    return &ModLoader::metadataBuilder.typeDefinitions[idx];
+}
+
 MethodIndex CreateMethods(ImageIndex image, TypeDefinitionIndex type,
                           std::span<MergeMethodDefinition> methods) {
     auto logger = MLogger::GetLogger().WithContext("Merge::API::CreateMethods");
@@ -324,6 +324,27 @@ MethodIndex CreateMethods(ImageIndex image, TypeDefinitionIndex type,
     }
 
     return startIdx;
+}
+
+MethodIndex FindMethodDefinitionIndex(TypeDefinitionIndex typeIdx,
+                                      std::string_view name,
+                                      uint16_t paramCount) {
+    MetadataBuilder &builder = ModLoader::metadataBuilder;
+
+    Il2CppTypeDefinition &type = builder.typeDefinitions[typeIdx];
+    for (size_t i = 0; i < type.method_count; i++) {
+        Il2CppMethodDefinition &method = builder.methods[type.methodStart + i];
+        if (name == &builder.string[method.nameIndex] &&
+            method.parameterCount == paramCount) {
+            return type.methodStart + i;
+        }
+    }
+
+    return -1;
+}
+
+Il2CppMethodDefinition GetMethodDefinition(MethodIndex idx) {
+    return ModLoader::metadataBuilder.methods[idx];
 }
 
 FieldIndex CreateFields(ImageIndex image, TypeDefinitionIndex type,
