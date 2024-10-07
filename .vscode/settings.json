@@ -100,7 +100,8 @@
         "coroutine": "cpp",
         "semaphore": "cpp",
         "numbers": "cpp",
-        "cassert": "cpp"
+        "cassert": "cpp",
+        "future": "cpp"
     },
     "C_Cpp.clang_format_style": "file"
 }

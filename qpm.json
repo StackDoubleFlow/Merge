@@ -7,18 +7,56 @@
     "version": "0.0.0",
     "url": "https://github.com/StackDoubleFlow/Merge",
     "additionalData": {
-      "overrideSoName": "libmerge.so"
+      "overrideSoName": "libmerge.so",
+      "cmake": true
     }
+  },
+  "workspace": {
+    "scripts": {
+      "build": [
+        "pwsh ./scripts/build.ps1"
+      ],
+      "clean": ["pwsh ./scripts/build.ps1 -clean"],
+      "copy": [
+        "pwsh ./scripts/copy.ps1 $0:?"
+      ],
+      "logcat": [
+        "pwsh ./scripts/start-logging.ps1"
+      ],
+      "qmod": [
+        "pwsh ./scripts/build.ps1",
+        "pwsh ./scripts/createqmod.ps1"
+      ],
+      "restart": [
+        "pwsh ./scripts/restart-game.ps1"
+      ],
+      "stack": [
+        "pwsh ./scripts/ndk-stack.ps1"
+      ],
+      "tomb": [
+        "pwsh ./scripts/pull-tombstone.ps1"
+      ]
+    },
+    "qmodIncludeDirs": ["./build", "./extern/libs"],
+    "qmodOutput": "./Merge.qmod"
   },
   "dependencies": [
     {
       "id": "beatsaber-hook",
-      "versionRange": "^3.1.2",
+      "versionRange": "^6.0.0",
+      "additionalData": {}
+    },
+    {
+      "id": "scotland2",
+      "versionRange": "^0.1.4",
       "additionalData": {
-        "extraFiles": [
-          "src/inline-hook"
-        ]
+        "includeQmod": false
       }
+    },
+    {
+      "id": "paper",
+      "versionRange": "^3.0.0",
+      "additionalData": {}
     },
     {
       "id": "capstone",
