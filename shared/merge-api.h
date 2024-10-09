@@ -2,6 +2,7 @@
 
 #include "il2cpp-class-internals.h"
 #include "il2cpp-metadata.h"
+#include "vm/GlobalMetadataFileInternals.h"
 #include <span>
 #include <string_view>
 #include <unordered_map>
@@ -62,8 +63,8 @@ enum struct AttributeTarget {
 struct MergeCustomAttributeTarget {
     AttributeTarget targetType;
     uint32_t targetIdx;
-    CustomAttributesCacheGenerator generator;
-    std::span<TypeIndex> attributes;
+    // ask stack about this if you need it
+    std::span<uint8_t> data;
 };
 
 /// Initialize Merge and its API. Call this before anything else.

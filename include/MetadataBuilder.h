@@ -1,6 +1,8 @@
 #pragma once
-#include "il2cpp-metadata.h"
-#include "il2cpp-runtime-metadata.h"
+#include "vm/GlobalMetadataFileInternals.h"
+#include "il2cpp-class-internals.h"
+// #include "il2cpp-metadata.h"
+// #include "il2cpp-runtime-metadata.h"
 #include <string_view>
 #include <unordered_map>
 #include <vector>
@@ -56,15 +58,14 @@ public:
     std::vector<Il2CppTypeDefinition> typeDefinitions;
     std::vector<Il2CppImageDefinition> images;
     std::vector<Il2CppAssemblyDefinition> assemblies;
-    std::vector<Il2CppMetadataUsageList> metadataUsageLists;
-    std::vector<Il2CppMetadataUsagePair> metadataUsagePairs;
     std::vector<Il2CppFieldRef> fieldRefs;
     std::vector<int32_t> referencedAssemblies;
-    std::vector<Il2CppCustomAttributeTypeRange> attributesInfo;
-    std::vector<TypeIndex> attributeTypes;
-    std::vector<TypeIndex> unresolvedVirtualCallParameterTypes;
-    std::vector<Il2CppRange> unresolvedVirtualCallParameterRanges;
+    std::vector<uint8_t> attributeData;
+    std::vector<Il2CppCustomAttributeDataRange> attributeDataRange;
+    std::vector<TypeIndex> unresolvedIndirectCallParameterTypes;
+    std::vector<Il2CppMetadataRange> unresolvedIndirectCallParameterRanges;
     std::vector<Il2CppWindowsRuntimeTypeNamePair> windowsRuntimeTypeNames;
+    std::vector<char> windowsRuntimeStrings;
     std::vector<TypeDefinitionIndex> exportedTypeDefinitions;
 
 private:

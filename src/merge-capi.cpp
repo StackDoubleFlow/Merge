@@ -137,10 +137,15 @@ void merge_set_method_overrides(TypeDefinitionIndex type,
 void merge_set_custom_attributes(ImageIndex image,
                                  MergeCustomAttributeTarget *targets,
                                  uint32_t targetsCount) {
-    auto span = std::span(
-        reinterpret_cast<Merge::API::MergeCustomAttributeTarget *>(targets),
-        targetsCount);
-    Merge::API::SetCustomAttributes(image, span);
+    std::vector<Merge::API::MergeCustomAttributeTarget> vec;
+    for (uint32_t i = 0; i < targetsCount; i++) {
+        MergeCustomAttributeTarget &cTarget = targets[i];
+        Merge::API::MergeCustomAttributeTarget target;
+        target.targetType = static_cast<Merge::API::AttributeTarget>(cTarget.targetType);
+        target.targetIdx = cTarget.targetIdx;
+        target.data = std::span(cTarget.data, cTarget.dataLength);
+    }
+    Merge::API::SetCustomAttributes(image, std::span(vec));
 }
 
 void merge_offset_size(TypeDefinitionIndex type, int32_t sizeOffset) {

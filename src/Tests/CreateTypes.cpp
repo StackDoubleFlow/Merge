@@ -7,7 +7,7 @@
 using namespace Merge::API;
 
 TEST_SETUP(CreateTypes) {
-    auto logger = MLogger::GetLogger().WithContext("TestCreateTypes");
+    auto logger = MLogger.WithContext("TestCreateTypes");
     logger.debug("Setting up test");
 
     TypeDefinitionIndex objectIdx = FindTypeDefinitionIndex("System", "Object");
@@ -29,7 +29,7 @@ TEST_SETUP(CreateTypes) {
 }
 
 TEST_LOAD(CreateTypes) {
-    auto logger = MLogger::GetLogger().WithContext("TestCreateTypes");
+    auto logger = MLogger.WithContext("TestCreateTypes");
     logger.debug("Running test");
 
     Il2CppClass *poggers = CRASH_UNLESS(il2cpp_utils::GetClassFromName("Gaming", "Poggers"));

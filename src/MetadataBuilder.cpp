@@ -13,12 +13,12 @@ static T MetadataOffset(const void* metadata, size_t sectionOffset, size_t itemI
         name.push_back(item); \
     }
 
-#define APPEND_BASE(name) APPEND_BASE_FUCKED(name, name##Count)
+#define APPEND_BASE(name) APPEND_BASE_FUCKED(name, name##Size)
 
 void MetadataBuilder::Initialize(const void *baseMetadata) {
     auto *header = static_cast<const Il2CppGlobalMetadataHeader *>(baseMetadata);
     CRASH_UNLESS(header->sanity == 0xFAB11BAF);
-    CRASH_UNLESS(header->version == 24);
+    CRASH_UNLESS(header->version == 31);
 
     APPEND_BASE(stringLiteral)
     APPEND_BASE(stringLiteralData)
@@ -42,15 +42,14 @@ void MetadataBuilder::Initialize(const void *baseMetadata) {
     APPEND_BASE(typeDefinitions)
     APPEND_BASE(images)
     APPEND_BASE(assemblies)
-    APPEND_BASE(metadataUsageLists)
-    APPEND_BASE(metadataUsagePairs)
     APPEND_BASE(fieldRefs)
     APPEND_BASE(referencedAssemblies)
-    APPEND_BASE(attributesInfo)
-    APPEND_BASE(attributeTypes)
-    APPEND_BASE(unresolvedVirtualCallParameterTypes)
-    APPEND_BASE(unresolvedVirtualCallParameterRanges)
-    APPEND_BASE_FUCKED(windowsRuntimeTypeNames, windowsRuntimeTypeNamesSize)
+    APPEND_BASE(attributeData)
+    APPEND_BASE(attributeDataRange);
+    APPEND_BASE(unresolvedIndirectCallParameterTypes)
+    APPEND_BASE(unresolvedIndirectCallParameterRanges)
+    APPEND_BASE(windowsRuntimeTypeNames);
+    APPEND_BASE(windowsRuntimeStrings);
     APPEND_BASE(exportedTypeDefinitions)
 
     for (size_t i = 0; i < typeDefinitions.size(); i++) {
@@ -62,7 +61,7 @@ void MetadataBuilder::Initialize(const void *baseMetadata) {
 }
 
 void MetadataBuilder::AppendMetadata(const void *metadata, std::string_view assemblyName, int typeOffset) {
-    auto logger = MLogger::GetLogger().WithContext("MetadataBuilder::AppendMetadata");
+    auto logger = Paper::ConstLoggerContext("Merge (MetadataBuilder::AppendMetadata)");
     logger.debug("Appending metadata to builder from %p with assembly %s", metadata, assemblyName.data());
     auto *header = static_cast<const Il2CppGlobalMetadataHeader *>(metadata);
     CRASH_UNLESS(header->sanity == 0xFAB11BAF);
@@ -71,7 +70,7 @@ void MetadataBuilder::AppendMetadata(const void *metadata, std::string_view asse
     // TODO: maybe use these? idk if it's necessary 
     std::unordered_map<TypeIndex, TypeIndex> typeDefinitionRedirects;
 
-    for (size_t i = 0; i < header->assembliesCount / sizeof(Il2CppAssemblyDefinition); i++) {
+    for (size_t i = 0; i < header->assembliesSize / sizeof(Il2CppAssemblyDefinition); i++) {
         Il2CppAssemblyDefinition assembly = *MetadataOffset<const Il2CppAssemblyDefinition *>(metadata, header->assembliesOffset, i);
         const char *aname = MetadataOffset<const char *>(metadata, header->stringOffset, assembly.aname.nameIndex);
         if (assemblyName != aname) continue;
@@ -149,10 +148,10 @@ TypeDefinitionIndex MetadataBuilder::RedirectTypeDefinition(std::unordered_map<T
     }
 
     // Look for the mod image the type is in
-    for (ImageIndex imageIndex = 0; imageIndex < header->imagesCount / sizeof(Il2CppImageDefinition); imageIndex++) {
+    for (ImageIndex imageIndex = 0; imageIndex < header->imagesSize / sizeof(Il2CppImageDefinition); imageIndex++) {
         const Il2CppImageDefinition *modImage = MetadataOffset<const Il2CppImageDefinition *>(metadata, header->imagesOffset, imageIndex);
         const char *modImageName = MetadataOffset<const char *>(metadata, header->stringOffset, modImage->nameIndex);
-        MLogger::GetLogger().info("Looking for %i in range %i..%i", modType, modImage->typeStart, modImage->typeStart + modImage->typeCount);
+        MLogger.info("Looking for %i in range %i..%i", modType, modImage->typeStart, modImage->typeStart + modImage->typeCount);
         if (modType >= modImage->typeStart && modType < modImage->typeStart + modImage->typeCount) {
             // Find our equivalent image
             for (Il2CppImageDefinition &image : images) {
@@ -165,11 +164,11 @@ TypeDefinitionIndex MetadataBuilder::RedirectTypeDefinition(std::unordered_map<T
                     return baseType;
                 }
             }
-            MLogger::GetLogger().error("Could not find equavalent image for %s", modImageName);
+            MLogger.error("Could not find equavalent image for %s", modImageName);
             SAFE_ABORT();
         }
     }
-    MLogger::GetLogger().error("Could not mod image containing mod type %i", modType);
+    MLogger.error("Could not mod image containing mod type %i", modType);
     SAFE_ABORT();
 }
 
@@ -190,7 +189,7 @@ StringIndex MetadataBuilder::AppendString(const char *str) {
         i += sizeof(decltype(name)::value_type); \
     }
 
-#define BUILD_METADATA(name) BUILD_METADATA_FUCKED(name, name##Count)
+#define BUILD_METADATA(name) BUILD_METADATA_FUCKED(name, name##Size)
 
 void *MetadataBuilder::Finish() {
     // TODO: Calculate metadata size
@@ -223,18 +222,17 @@ void *MetadataBuilder::Finish() {
     BUILD_METADATA(typeDefinitions)
     BUILD_METADATA(images)
     BUILD_METADATA(assemblies)
-    BUILD_METADATA(metadataUsageLists)
-    BUILD_METADATA(metadataUsagePairs)
     BUILD_METADATA(fieldRefs)
     BUILD_METADATA(referencedAssemblies)
-    BUILD_METADATA(attributesInfo)
-    BUILD_METADATA(attributeTypes)
-    BUILD_METADATA(unresolvedVirtualCallParameterTypes)
-    BUILD_METADATA(unresolvedVirtualCallParameterRanges)
-    BUILD_METADATA_FUCKED(windowsRuntimeTypeNames, windowsRuntimeTypeNamesSize)
+    BUILD_METADATA(attributeData)
+    BUILD_METADATA(attributeDataRange)
+    BUILD_METADATA(unresolvedIndirectCallParameterTypes)
+    BUILD_METADATA(unresolvedIndirectCallParameterRanges)
+    BUILD_METADATA(windowsRuntimeTypeNames)
+    BUILD_METADATA(windowsRuntimeStrings)
     BUILD_METADATA(exportedTypeDefinitions)
     
-    MLogger::GetLogger().debug("Built new metadata at %p with size %i", metadata, i);
+    MLogger.debug("Built new metadata at %p with size %i", metadata, i);
 
     return metadata;
 }
@@ -246,7 +244,7 @@ std::optional<TypeDefinitionIndex> MetadataBuilder::FindTypeDefinition(const cha
     }
     // for (auto &[pair, idx] : typeNameMap) {
     //     auto &[namespaze, name] = pair;
-    //     MLogger::GetLogger().info("%s.%s", namespaze.c_str(), name.c_str());
+    //     MLogger.info("%s.%s", namespaze.c_str(), name.c_str());
     // }
     return std::nullopt;
 }

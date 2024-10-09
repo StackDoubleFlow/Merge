@@ -53,7 +53,8 @@ AssemblyIndex FindAssemblyIndex(std::string_view name) {
 
     for (AssemblyIndex i = 0; i < builder.assemblies.size(); i++) {
         Il2CppAssemblyDefinition &assembly = builder.assemblies[i];
-        std::string_view assemblyName = &builder.string[assembly.aname.nameIndex];
+        std::string_view assemblyName =
+            &builder.string[assembly.aname.nameIndex];
         if (name == assemblyName) {
             return i;
         }
@@ -102,9 +103,9 @@ namespace {
 TypeDefinitionIndex GetInheritingDefinition(TypeIndex idx) {
     const Il2CppType *type = ModLoader::GetType(idx);
     if (type->type == IL2CPP_TYPE_GENERICINST) {
-        return type->data.generic_class->typeDefinitionIndex;
+        return type->data.generic_class->type->data.__klassIndex;
     } else {
-        return type->data.klassIndex;
+        return type->data.__klassIndex;
     }
 }
 
@@ -118,13 +119,10 @@ Il2CppTypeDefinition CreateType(ImageIndex image,
     typeDef.namespaceIndex = builder.AppendString(type.namespaze.data());
     typeDef.byvalTypeIndex = ModLoader::GetTypesCount();
     Il2CppType addedType;
-    addedType.data.klassIndex = idx;
+    addedType.data.__klassIndex = idx;
     addedType.attrs = 0;
     addedType.type = type.typeEnum;
     addedType.byref = false;
-    ModLoader::addedTypes.push_back(new Il2CppType(addedType));
-    typeDef.byrefTypeIndex = ModLoader::GetTypesCount();
-    addedType.byref = true;
     ModLoader::addedTypes.push_back(new Il2CppType(addedType));
     typeDef.declaringTypeIndex = -1;
     typeDef.parentIndex = type.parent;
@@ -153,8 +151,7 @@ Il2CppTypeDefinition CreateType(ImageIndex image,
 
     typeDef.interfacesStart = builder.interfaces.size();
     // Copy interfaces of parent
-    MLogger::GetLogger().debug("Parent interfaces count: %i",
-                               parentDef.interfaces_count);
+    MLogger.debug("Parent interfaces count: %i", parentDef.interfaces_count);
     builder.interfaces.insert(
         builder.interfaces.end(),
         builder.interfaces.begin() + parentDef.interfacesStart,
@@ -192,8 +189,8 @@ Il2CppTypeDefinition CreateType(ImageIndex image,
             builder.typeDefinitions[GetInheritingDefinition(interfaceidx)];
         for (uint16_t i = 0; i < interfaceDef.method_count; i++) {
             auto &method = builder.methods[interfaceDef.methodStart];
-            MLogger::GetLogger().debug("Placing method with slot %i at slot %i",
-                                       method.slot, i);
+            MLogger.debug("Placing method with slot %i at slot %i", method.slot,
+                          i);
             // vtable should be populated later with a call to
             // SetMethodOverrides
             builder.vtableMethods.push_back(-1);
@@ -211,7 +208,7 @@ static ImageIndex lastCreateTypesImage = -1;
 TypeDefinitionIndex CreateTypes(ImageIndex image,
                                 std::span<MergeTypeDefinition> types) {
     lastCreateTypesImage = image;
-    auto logger = MLogger::GetLogger().WithContext("Merge::API::CreateTypes");
+    auto logger = Paper::ConstLoggerContext("Merge (Merge::API::CreateTypes)");
     MetadataBuilder &builder = ModLoader::metadataBuilder;
 
     TypeDefinitionIndex startIdx = builder.typeDefinitions.size();
@@ -231,7 +228,7 @@ TypeDefinitionIndex CreateTypes(ImageIndex image,
 }
 
 TypeDefinitionIndex AppendTypes(std::span<MergeTypeDefinition> types) {
-    auto logger = MLogger::GetLogger().WithContext("Merge::API::AppendTypes");
+    auto logger = Paper::ConstLoggerContext("Merge (Merge::API::AppendTypes)");
     MetadataBuilder &builder = ModLoader::metadataBuilder;
 
     ImageIndex image = lastCreateTypesImage;
@@ -271,7 +268,8 @@ Il2CppTypeDefinition *GetTypeDefinition(TypeDefinitionIndex idx) {
 
 MethodIndex CreateMethods(ImageIndex image, TypeDefinitionIndex type,
                           std::span<MergeMethodDefinition> methods) {
-    auto logger = MLogger::GetLogger().WithContext("Merge::API::CreateMethods");
+    auto logger =
+        Paper::ConstLoggerContext("Merge (Merge::API::CreateMethods)");
     MetadataBuilder &builder = ModLoader::metadataBuilder;
     CodeGenModuleBuilder &moduleBuilder =
         ModLoader::addedCodeGenModules.at(image);
@@ -415,7 +413,7 @@ bool RecursiveCheckParents(TypeDefinitionIndex typeIdx,
 void SetMethodOverrides(TypeDefinitionIndex typeIdx,
                         const OverridesMap &overrides) {
     auto logger =
-        MLogger::GetLogger().WithContext("Merge::API::SetMethodOverrides");
+        Paper::ConstLoggerContext("Merge (Merge::API::SetMethodOverrides)");
     MetadataBuilder &builder = ModLoader::metadataBuilder;
     Il2CppTypeDefinition &type = builder.typeDefinitions[typeIdx];
     for (auto &[oMethodIdx, vMethodIdx] : overrides) {
@@ -460,8 +458,8 @@ void SetMethodOverrides(TypeDefinitionIndex typeIdx,
 
 namespace {
 
-bool CARangeTokenComparer(Il2CppCustomAttributeTypeRange a,
-                          Il2CppCustomAttributeTypeRange b) {
+bool CARangeTokenComparer(Il2CppCustomAttributeDataRange a,
+                          Il2CppCustomAttributeDataRange b) {
     return a.token < b.token;
 }
 
@@ -472,46 +470,43 @@ void SetCustomAttributes(ImageIndex imageIdx,
     MetadataBuilder &builder = ModLoader::metadataBuilder;
 
     Il2CppImageDefinition &image = builder.images[imageIdx];
-    image.customAttributeStart = builder.attributesInfo.size();
+    image.customAttributeStart = builder.attributeDataRange.size();
     image.customAttributeCount = targets.size();
 
     for (MergeCustomAttributeTarget &caTarget : targets) {
-        Il2CppCustomAttributeTypeRange typeRange;
-        typeRange.start = builder.attributeTypes.size();
-        typeRange.count = caTarget.attributes.size();
+        Il2CppCustomAttributeDataRange dataRange;
+        dataRange.startOffset = builder.attributeData.size();
         switch (caTarget.targetType) {
         case AttributeTarget::Type:
-            typeRange.token = builder.typeDefinitions[caTarget.targetIdx].token;
+            dataRange.token = builder.typeDefinitions[caTarget.targetIdx].token;
         case AttributeTarget::Method:
-            typeRange.token = builder.methods[caTarget.targetIdx].token;
+            dataRange.token = builder.methods[caTarget.targetIdx].token;
         case AttributeTarget::Property:
-            typeRange.token = builder.properties[caTarget.targetIdx].token;
+            dataRange.token = builder.properties[caTarget.targetIdx].token;
         case AttributeTarget::Field:
-            typeRange.token = builder.fields[caTarget.targetIdx].token;
+            dataRange.token = builder.fields[caTarget.targetIdx].token;
         case AttributeTarget::Parameter:
-            typeRange.token = builder.parameters[caTarget.targetIdx].token;
+            dataRange.token = builder.parameters[caTarget.targetIdx].token;
         case AttributeTarget::Assembly:
-            typeRange.token = builder.assemblies[caTarget.targetIdx].token;
+            dataRange.token = builder.assemblies[caTarget.targetIdx].token;
         case AttributeTarget::Event:
-            typeRange.token = builder.events[caTarget.targetIdx].token;
+            dataRange.token = builder.events[caTarget.targetIdx].token;
         }
-        for (CustomAttributeIndex caIdx : caTarget.attributes) {
-            builder.attributeTypes.push_back(caIdx);
-        }
-        builder.attributesInfo.push_back(typeRange);
-        ModLoader::addedCACacheGenerators.push_back(caTarget.generator);
+        builder.attributeData.insert(builder.attributeData.end(),
+                                     caTarget.data.begin(),
+                                     caTarget.data.end());
+        builder.attributeDataRange.push_back(dataRange);
     }
 
     // Sort by token for bsearch
-    std::sort(builder.attributesInfo.begin() + image.customAttributeStart,
-              builder.attributesInfo.begin() + image.customAttributeStart +
+    std::sort(builder.attributeDataRange.begin() + image.customAttributeStart,
+              builder.attributeDataRange.begin() + image.customAttributeStart +
                   image.customAttributeCount,
               CARangeTokenComparer);
 }
 
 void OffsetSize(TypeDefinitionIndex type, int32_t sizeOffset) {
-    MLogger::GetLogger().debug("Adding size %i to type definition idx %i",
-                               sizeOffset, type);
+    MLogger.debug("Adding size %i to type definition idx %i", sizeOffset, type);
     auto itr = ModLoader::sizeOffsets.find(type);
     if (itr != ModLoader::sizeOffsets.end()) {
         itr->second += sizeOffset;

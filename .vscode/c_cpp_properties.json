@@ -10,8 +10,8 @@
       "includePath": [
         "${workspaceFolder}/include",
         "${workspaceFolder}/shared",
-        "${workspaceFolder}/extern",
-        "${workspaceFolder}/extern/libil2cpp/il2cpp/libil2cpp",
+        "${workspaceFolder}/extern/includes",
+        "${workspaceFolder}/extern/includes/libil2cpp/il2cpp/libil2cpp",
         "${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include",
         "${ANDROID_NDK_HOME}/sources/cxx-stl/llvm-libc++/include",
         "${ANDROID_NDK_HOME}/sources/cxx-stl/llvm-libc++abi/include"

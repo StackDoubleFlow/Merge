@@ -1,13 +1,12 @@
 #pragma once
-#include "beatsaber-hook/shared/utils/logging.hpp"
+#include "paper/shared/logger.hpp"
+
+constexpr auto MLogger = Paper::ConstLoggerContext("Merge");
 
 struct Il2CppGlobalMetadataHeader;
-class MLogger {
-public:
-    static inline ModInfo modInfo = ModInfo();
-    static Logger &GetLogger() {
-        static auto logger = new Logger(modInfo, LoggerOptions(false, true));
-        return *logger;
-    }
-    static void LogMetadataHeader(const Il2CppGlobalMetadataHeader *header);
-};
+
+namespace MDebugLog {
+
+void LogMetadataHeader(const Il2CppGlobalMetadataHeader *header);
+
+} // namespace MDebugLog

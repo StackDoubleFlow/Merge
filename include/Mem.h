@@ -1,5 +1,6 @@
 #pragma once
 #include <sys/mman.h>
+#include "Logger.h"
 
 // https://github.com/Rprop/And64InlineHook/blob/master/And64InlineHook.cpp#L474
 #define __ptr(p) reinterpret_cast<void *>(p)
@@ -18,9 +19,13 @@
                    : __page_align(n),                                          \
                prot)
 
+namespace {
+
 void MemDump(void *base, size_t n) {
-    MLogger::GetLogger().debug("Memory dump: %p, n: %zu", base, n);
+    MLogger.debug("Memory dump: %p, n: %zu", base, n);
     for (size_t i = 0; i < n; i++) {
-        MLogger::GetLogger().debug("%08x", static_cast<int32_t *>(base)[i]);
+        MLogger.debug("%08x", static_cast<int32_t *>(base)[i]);
     }
 }
+
+} // namespace

@@ -15,19 +15,19 @@ public:
 
     template<uint32_t n = 1, uint32_t rets = 0>
     const uint32_t *b() {
-        addr = cs::findNthB<n, true, rets>(addr);
+        addr = *cs::findNthB<n, true, rets>(addr);
         return addr;
     }
 
     template<uint32_t n = 1, uint32_t rets = 0>
     const uint32_t *bl() {
-        addr = cs::findNthBl<n, true, rets>(addr);
+        addr = *cs::findNthBl<n, true, rets>(addr);
         return addr;
     }
 
     template<uint32_t n = 1>
     void *pcRelData() {
-        return std::get<2>(cs::getpcaddr<n, 1>(addr));
+        return std::get<2>(*cs::getpcaddr<n, 1>(addr));
     }
 
     template<typename T, uint32_t n = 1>

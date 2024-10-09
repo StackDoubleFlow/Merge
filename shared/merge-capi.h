@@ -2,6 +2,7 @@
 
 #include "il2cpp-class-internals.h"
 #include "il2cpp-metadata.h"
+#include "vm/GlobalMetadataFileInternals.h"
 
 struct MergeParameterDefinition {
     char *name;
@@ -57,9 +58,8 @@ enum MergeCATargetType {
 struct MergeCustomAttributeTarget {
     MergeCATargetType targetType;
     uint32_t targetIdx;
-    CustomAttributesCacheGenerator generator;
-    TypeIndex *attributes;
-    int32_t attributesCount;
+    uint8_t *data;
+    size_t dataLength;
 };
 
 #if defined(__cplusplus)
