@@ -23,8 +23,8 @@ TEST_LOAD(OffsetSize) {
 
     Il2CppClass *caching = CRASH_UNLESS(il2cpp_utils::GetClassFromName("UnityEngine", "Caching"));
     il2cpp_functions::il2cpp_Class_Init(caching);
-    MLogger.debug("Actual size %u", caching->actualSize);
-    MLogger.debug("Added size %lu", caching->actualSize - sizeof(Il2CppObject));
+    MLogger.debug("Actual size {}", caching->actualSize);
+    MLogger.debug("Added size {}", caching->actualSize - sizeof(Il2CppObject));
     CRASH_UNLESS(caching->actualSize == sizeof(Il2CppObject) + 4);
 }
 

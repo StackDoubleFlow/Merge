@@ -20,14 +20,14 @@ MOD_EXTERN_FUNC void setup(CModInfo *info) {
     ModLoader::Initialize();
 
 #ifdef MERGE_TEST
-    MLogger.debug("Setting up %lu tests", MergeTests::setupTests.size());
+    MLogger.debug("Setting up {} tests", MergeTests::setupTests.size());
     MergeTests::SetupTests();
 #endif
 }
 
 extern "C" void load() {
 #ifdef MERGE_TEST
-    MLogger.debug("Running %lu tests", MergeTests::loadTests.size());
+    MLogger.debug("Running {} tests", MergeTests::loadTests.size());
     MergeTests::LoadTests();
 #endif
 }

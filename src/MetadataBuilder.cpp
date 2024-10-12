@@ -62,7 +62,7 @@ void MetadataBuilder::Initialize(const void *baseMetadata) {
 
 void MetadataBuilder::AppendMetadata(const void *metadata, std::string_view assemblyName, int typeOffset) {
     auto logger = Paper::ConstLoggerContext("Merge (MetadataBuilder::AppendMetadata)");
-    logger.debug("Appending metadata to builder from %p with assembly %s", metadata, assemblyName.data());
+    logger.debug("Appending metadata to builder from {} with assembly {}", metadata, assemblyName.data());
     auto *header = static_cast<const Il2CppGlobalMetadataHeader *>(metadata);
     CRASH_UNLESS(header->sanity == 0xFAB11BAF);
     CRASH_UNLESS(header->version == 24);
@@ -74,7 +74,7 @@ void MetadataBuilder::AppendMetadata(const void *metadata, std::string_view asse
         Il2CppAssemblyDefinition assembly = *MetadataOffset<const Il2CppAssemblyDefinition *>(metadata, header->assembliesOffset, i);
         const char *aname = MetadataOffset<const char *>(metadata, header->stringOffset, assembly.aname.nameIndex);
         if (assemblyName != aname) continue;
-        logger.debug("Merging metadata from assembly %s", aname);
+        logger.debug("Merging metadata from assembly {}", aname);
 
         const char *publicKey = MetadataOffset<const char *>(metadata, header->stringOffset, assembly.aname.publicKeyIndex);
         const char *culture = MetadataOffset<const char *>(metadata, header->stringOffset, assembly.aname.cultureIndex);
@@ -88,7 +88,7 @@ void MetadataBuilder::AppendMetadata(const void *metadata, std::string_view asse
 
         Il2CppImageDefinition image = *MetadataOffset<const Il2CppImageDefinition *>(metadata, header->imagesOffset, imageIndex);
         const char *imageName = MetadataOffset<const char *>(metadata, header->stringOffset, image.nameIndex);
-        logger.debug("Adding image %s", imageName);
+        logger.debug("Adding image {}", imageName);
         image.nameIndex = AppendString(imageName);
         image.assemblyIndex = assemblyIndex;
         TypeDefinitionIndex typeStart = typeDefinitions.size();
@@ -98,7 +98,7 @@ void MetadataBuilder::AppendMetadata(const void *metadata, std::string_view asse
             const char *name = MetadataOffset<const char *>(metadata, header->stringOffset, type.nameIndex);
             const char *namespaze = MetadataOffset<const char *>(metadata, header->stringOffset, type.namespaceIndex);
             typeNameMap[std::make_pair(namespaze, name)] = typeDefinitions.size();
-            logger.debug("Adding type %s.%s, interfaces count: %hi, vtable size: %hi", namespaze, name, type.interfaces_count, type.vtable_count);
+            logger.debug("Adding type {}.{}, interfaces count: {}, vtable size: {}", namespaze, name, type.interfaces_count, type.vtable_count);
             type.nameIndex = AppendString(name);
             type.namespaceIndex = AppendString(namespaze);
 
@@ -106,7 +106,7 @@ void MetadataBuilder::AppendMetadata(const void *metadata, std::string_view asse
             for (size_t i = 0; i < type.method_count; i++) {
                 Il2CppMethodDefinition method = *MetadataOffset<const Il2CppMethodDefinition *>(metadata, header->methodsOffset, i + type.methodStart);
                 const char *name = MetadataOffset<const char *>(metadata, header->stringOffset, method.nameIndex);
-                logger.debug("Adding method %s, RID: %i, slot: %hi", name, method.token & 0x00FFFFFF, method.slot);
+                logger.debug("Adding method {}, RID: {}, slot: {}", name, method.token & 0x00FFFFFF, method.slot);
                 method.nameIndex = AppendString(name);
                 method.declaringType += typeOffset;
                 method.returnType += typeOffset;
@@ -151,7 +151,7 @@ TypeDefinitionIndex MetadataBuilder::RedirectTypeDefinition(std::unordered_map<T
     for (ImageIndex imageIndex = 0; imageIndex < header->imagesSize / sizeof(Il2CppImageDefinition); imageIndex++) {
         const Il2CppImageDefinition *modImage = MetadataOffset<const Il2CppImageDefinition *>(metadata, header->imagesOffset, imageIndex);
         const char *modImageName = MetadataOffset<const char *>(metadata, header->stringOffset, modImage->nameIndex);
-        MLogger.info("Looking for %i in range %i..%i", modType, modImage->typeStart, modImage->typeStart + modImage->typeCount);
+        MLogger.info("Looking for {} in range {}..{}", modType, modImage->typeStart, modImage->typeStart + modImage->typeCount);
         if (modType >= modImage->typeStart && modType < modImage->typeStart + modImage->typeCount) {
             // Find our equivalent image
             for (Il2CppImageDefinition &image : images) {
@@ -164,11 +164,11 @@ TypeDefinitionIndex MetadataBuilder::RedirectTypeDefinition(std::unordered_map<T
                     return baseType;
                 }
             }
-            MLogger.error("Could not find equavalent image for %s", modImageName);
+            MLogger.error("Could not find equavalent image for {}", modImageName);
             SAFE_ABORT();
         }
     }
-    MLogger.error("Could not mod image containing mod type %i", modType);
+    MLogger.error("Could not mod image containing mod type {}", modType);
     SAFE_ABORT();
 }
 
@@ -232,7 +232,7 @@ void *MetadataBuilder::Finish() {
     BUILD_METADATA(windowsRuntimeStrings)
     BUILD_METADATA(exportedTypeDefinitions)
     
-    MLogger.debug("Built new metadata at %p with size %i", metadata, i);
+    MLogger.debug("Built new metadata at {} with size {}", metadata, i);
 
     return metadata;
 }
@@ -244,7 +244,7 @@ std::optional<TypeDefinitionIndex> MetadataBuilder::FindTypeDefinition(const cha
     }
     // for (auto &[pair, idx] : typeNameMap) {
     //     auto &[namespaze, name] = pair;
-    //     MLogger.info("%s.%s", namespaze.c_str(), name.c_str());
+    //     MLogger.info("{}.{}", namespaze.c_str(), name.c_str());
     // }
     return std::nullopt;
 }

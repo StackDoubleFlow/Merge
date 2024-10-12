@@ -18,7 +18,7 @@ void *ModReader::ReadBaseMetadata() {
 void *ModReader::ReadFile(std::filesystem::path path) {
     int fd = open(path.c_str(), O_RDONLY);
     if (fd == -1) {
-        MLogger.error("Error reading file at %s: %s", path.c_str(),
+        MLogger.error("Error reading file at {}: {}", path.c_str(),
                       strerror(errno));
         SAFE_ABORT();
     }

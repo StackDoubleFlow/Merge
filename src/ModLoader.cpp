@@ -16,7 +16,7 @@ MAKE_HOOK(MetadataCache_Register, nullptr, void,
           Il2CppCodeRegistration *codeRegistration,
           Il2CppMetadataRegistration *metadataRegistration,
           Il2CppCodeGenOptions *codeGenOptions) {
-    MLogger.debug("MetadataCache_Register(%p, %p, %p)",
+    MLogger.debug("MetadataCache_Register({}, {}, {})",
                   fmt::ptr(codeRegistration), fmt::ptr(metadataRegistration),
                   fmt::ptr(codeGenOptions));
     ModLoader::FixupCodeRegistration(codeRegistration, metadataRegistration,
@@ -27,7 +27,7 @@ MAKE_HOOK(MetadataCache_Register, nullptr, void,
 
 MAKE_HOOK(MetadataLoader_LoadMetadataFile, nullptr, void *,
           const char *fileName) {
-    MLogger.debug("MetadataLoader_LoadMetadataFile(\"%s\")", fileName);
+    MLogger.debug("MetadataLoader_LoadMetadataFile(\"{}\")", fileName);
     return ModLoader::CreateNewMetadata();
 }
 
@@ -119,7 +119,7 @@ void ModLoader::Initialize() {
     s_Il2CppCodeGenOptions = xref.pcRelData<Il2CppCodeGenOptions, 3>();
 
     void *baseMetadata = ModReader::ReadBaseMetadata();
-    MLogger.debug("ModLoader::Initialize with baseMetadata at %p",
+    MLogger.debug("ModLoader::Initialize with baseMetadata at {}",
                   baseMetadata);
     metadataBuilder.Initialize(baseMetadata);
 
@@ -185,7 +185,7 @@ void ModLoader::FixupCodeRegistration(
 
     MLogger.debug("Final modules:");
     for (const Il2CppCodeGenModule *module : codeGenModules) {
-        MLogger.debug(" %p: %s", fmt::ptr(module), module->moduleName);
+        MLogger.debug(" {}: {}", fmt::ptr(module), module->moduleName);
     }
     const Il2CppCodeGenModule **newCodegenModules =
         new const Il2CppCodeGenModule *[codeGenModules.size()];

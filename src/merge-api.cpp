@@ -151,7 +151,7 @@ Il2CppTypeDefinition CreateType(ImageIndex image,
 
     typeDef.interfacesStart = builder.interfaces.size();
     // Copy interfaces of parent
-    MLogger.debug("Parent interfaces count: %i", parentDef.interfaces_count);
+    MLogger.debug("Parent interfaces count: {}", parentDef.interfaces_count);
     builder.interfaces.insert(
         builder.interfaces.end(),
         builder.interfaces.begin() + parentDef.interfacesStart,
@@ -189,7 +189,7 @@ Il2CppTypeDefinition CreateType(ImageIndex image,
             builder.typeDefinitions[GetInheritingDefinition(interfaceidx)];
         for (uint16_t i = 0; i < interfaceDef.method_count; i++) {
             auto &method = builder.methods[interfaceDef.methodStart];
-            MLogger.debug("Placing method with slot %i at slot %i", method.slot,
+            MLogger.debug("Placing method with slot {} at slot {}", method.slot,
                           i);
             // vtable should be populated later with a call to
             // SetMethodOverrides
@@ -215,7 +215,7 @@ TypeDefinitionIndex CreateTypes(ImageIndex image,
     for (auto &type : types) {
         Il2CppTypeDefinition typeDef = CreateType(image, type);
         logger.debug(
-            "Creating type %s.%s, interfaces count: %hi, vtable size: %hi",
+            "Creating type {}.{}, interfaces count: {}, vtable size: {}",
             type.namespaze.data(), type.name.data(), typeDef.interfaces_count,
             typeDef.vtable_count);
         builder.typeDefinitions.push_back(typeDef);
@@ -241,7 +241,7 @@ TypeDefinitionIndex AppendTypes(std::span<MergeTypeDefinition> types) {
     for (auto &type : types) {
         Il2CppTypeDefinition typeDef = CreateType(image, type);
         logger.debug(
-            "Appending type %s.%s, interfaces count: %hi, vtable size: %hi",
+            "Appending type {}.{}, interfaces count: {}, vtable size: {}",
             type.namespaze.data(), type.name.data(), typeDef.interfaces_count,
             typeDef.vtable_count);
         builder.typeDefinitions.push_back(typeDef);
@@ -310,7 +310,7 @@ MethodIndex CreateMethods(ImageIndex image, TypeDefinitionIndex type,
         builder.methods.push_back(methodDef);
         int32_t invokerIdx = ModLoader::GetInvokersCount();
         ModLoader::addedInvokers.push_back(method.invoker);
-        logger.debug("Adding method %s, RID: %i", method.name.data(), rid);
+        logger.debug("Adding method {}, RID: {}", method.name.data(), rid);
         moduleBuilder.AppendMethod(method.methodPointer, invokerIdx);
 
         Il2CppTypeDefinition &typeDef = builder.typeDefinitions[type];
@@ -419,13 +419,13 @@ void SetMethodOverrides(TypeDefinitionIndex typeIdx,
     for (auto &[oMethodIdx, vMethodIdx] : overrides) {
         auto &oMethod = builder.methods[oMethodIdx];
         if (oMethod.declaringType != typeIdx) {
-            logger.error("Overriding method %i does not belong to type %i",
+            logger.error("Overriding method {} does not belong to type {}",
                          oMethodIdx, typeIdx);
             SAFE_ABORT();
         }
         auto &vMethod = builder.methods[vMethodIdx];
         if (static_cast<int16_t>(vMethod.slot) == -1) {
-            logger.error("Tried to override non-virtual method %i", vMethodIdx);
+            logger.error("Tried to override non-virtual method {}", vMethodIdx);
             SAFE_ABORT();
         }
         // Check if vMethod exists in vtable interfaces offsets
@@ -445,7 +445,7 @@ void SetMethodOverrides(TypeDefinitionIndex typeIdx,
             // Method is in a parent type
             slot = vMethod.slot;
         } else {
-            logger.error("Could not find vMethod %i in parents or interfaces",
+            logger.error("Could not find vMethod {} in parents or interfaces",
                          vMethodIdx);
             SAFE_ABORT();
         }
@@ -506,7 +506,7 @@ void SetCustomAttributes(ImageIndex imageIdx,
 }
 
 void OffsetSize(TypeDefinitionIndex type, int32_t sizeOffset) {
-    MLogger.debug("Adding size %i to type definition idx %i", sizeOffset, type);
+    MLogger.debug("Adding size {} to type definition idx {}", sizeOffset, type);
     auto itr = ModLoader::sizeOffsets.find(type);
     if (itr != ModLoader::sizeOffsets.end()) {
         itr->second += sizeOffset;
