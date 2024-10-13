@@ -26,10 +26,12 @@ public:
     static MetadataBuilder metadataBuilder;
     static std::vector<Il2CppType *> addedTypes;
     static std::vector<InvokerMethod> addedInvokers;
+    static std::vector<Il2CppGenericClass *> addedGenericClasses;
+    static std::vector<Il2CppGenericInst *> addedGenericInsts;
     static std::unordered_map<ImageIndex, CodeGenModuleBuilder>
         addedCodeGenModules;
     static std::unordered_map<ImageIndex, TokenGenerator> tokenGenerators;
-    
+
     // Il2CppCodeRegistration.cpp
     static const Il2CppMetadataRegistration *g_MetadataRegistration;
     static const Il2CppCodeRegistration *g_CodeRegistration;

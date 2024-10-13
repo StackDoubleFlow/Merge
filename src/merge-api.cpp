@@ -29,6 +29,44 @@ TypeIndex CreatePointerType(TypeIndex type) {
     return typeIdx;
 }
 
+TypeIndex CreateGenericInst(TypeDefinitionIndex genericTypeDefIdx,
+                            std::span<TypeIndex> typeArgs) {
+    Il2CppTypeDefinition *genericTypeDef = GetTypeDefinition(genericTypeDefIdx);
+    const Il2CppType *genericType =
+        ModLoader::GetType(genericTypeDef->byvalTypeIndex);
+
+    // Check to see if the type def is actually generic
+    CRASH_UNLESS(genericTypeDef->genericContainerIndex != -1);
+    Il2CppGenericContainer *genericContainer =
+        &ModLoader::metadataBuilder
+             .genericContainers[genericTypeDef->genericContainerIndex];
+    // Check to see if the number of generic args is correct
+    CRASH_UNLESS(genericContainer->type_argc == typeArgs.size());
+
+    Il2CppGenericInst *genericInst = new Il2CppGenericInst();
+    genericInst->type_argc = typeArgs.size();
+    genericInst->type_argv = new const Il2CppType *[typeArgs.size()];
+    for (size_t i = 0; i < typeArgs.size(); i++) {
+        genericInst->type_argv[i] = ModLoader::GetType(typeArgs[i]);
+    }
+    // TODO: Don't added duplicates
+    ModLoader::addedGenericInsts.push_back(genericInst);
+
+    Il2CppGenericClass *genericClass = new Il2CppGenericClass();
+    genericClass->type = genericType;
+    genericClass->context.class_inst = genericInst;
+    ModLoader::addedGenericClasses.push_back(genericClass);
+
+    TypeIndex typeIdx = ModLoader::GetTypesCount();
+    Il2CppType addedType;
+    addedType.data.generic_class = genericClass;
+    addedType.attrs = 0;
+    addedType.type = IL2CPP_TYPE_GENERICINST;
+    addedType.byref = false;
+    ModLoader::addedTypes.push_back(new Il2CppType(addedType));
+    return typeIdx;
+}
+
 AssemblyIndex CreateAssembly(std::string_view name) {
     MetadataBuilder &builder = ModLoader::metadataBuilder;
 

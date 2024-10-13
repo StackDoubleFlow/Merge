@@ -67,6 +67,8 @@ bool ModLoader::initialized;
 MetadataBuilder ModLoader::metadataBuilder;
 std::vector<Il2CppType *> ModLoader::addedTypes;
 std::vector<InvokerMethod> ModLoader::addedInvokers;
+std::vector<Il2CppGenericClass *> ModLoader::addedGenericClasses;
+std::vector<Il2CppGenericInst *> ModLoader::addedGenericInsts;
 std::unordered_map<ImageIndex, CodeGenModuleBuilder>
     ModLoader::addedCodeGenModules;
 std::unordered_map<ImageIndex, TokenGenerator> ModLoader::tokenGenerators;
@@ -183,6 +185,18 @@ void ModLoader::FixupCodeRegistration(
     VECTORIFY(const Il2CppType *, types, metadataRegistration->types);
     types.insert(types.end(), addedTypes.begin(), addedTypes.end());
 
+    // metadataRegistration->genericClasses
+    VECTORIFY(Il2CppGenericClass *, genericClasses,
+              metadataRegistration->genericClasses);
+    genericClasses.insert(genericClasses.end(), addedGenericClasses.begin(),
+                          addedGenericClasses.end());
+
+    // metadataRegistration->genericInsts
+    VECTORIFY(const Il2CppGenericInst *, genericInsts,
+              metadataRegistration->genericInsts);
+    genericInsts.insert(genericInsts.end(), addedGenericInsts.begin(),
+                        addedGenericInsts.end());
+
     MLogger.debug("Final modules:");
     for (const Il2CppCodeGenModule *module : codeGenModules) {
         MLogger.debug(" {}: {}", fmt::ptr(module), module->moduleName);
@@ -202,4 +216,16 @@ void ModLoader::FixupCodeRegistration(
     std::copy(types.begin(), types.end(), newTypes);
     metadataRegistration->types = newTypes;
     metadataRegistration->typesCount = types.size();
+
+    Il2CppGenericClass **newGenericClasses =
+        new Il2CppGenericClass *[genericClasses.size()];
+    std::copy(genericClasses.begin(), genericClasses.end(), newGenericClasses);
+    metadataRegistration->genericClasses = newGenericClasses;
+    metadataRegistration->genericClassesCount = genericClasses.size();
+
+    const Il2CppGenericInst **newGenericInsts =
+        new const Il2CppGenericInst *[genericInsts.size()];
+    std::copy(genericInsts.begin(), genericInsts.end(), newGenericInsts);
+    metadataRegistration->genericInsts = newGenericInsts;
+    metadataRegistration->genericInstsCount = genericInsts.size();
 }

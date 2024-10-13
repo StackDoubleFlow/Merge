@@ -88,6 +88,15 @@ TypeIndex CreateSZArrayType(TypeIndex elementType);
 TypeIndex CreatePointerType(TypeIndex type);
 
 /**
+ * Creates an instantiation of a generic type definition
+ *
+ * @param genericType The generic type definition to instantiate
+ * @param typeArgs The types to assign to the generic parameters
+ */
+TypeIndex CreateGenericInst(TypeDefinitionIndex genericTypeDef,
+                            std::span<TypeIndex> typeArgs);
+
+/**
  * Creates an assembly and adds it to the metadata.
  *
  * You must link an image to this assembly with `CreateImage`
@@ -106,7 +115,8 @@ AssemblyIndex CreateAssembly(std::string_view name);
 AssemblyIndex FindAssemblyIndex(std::string_view name);
 
 /**
- * Gets an existing assembly definition from the metadata at the specified index.
+ * Gets an existing assembly definition from the metadata at the specified
+ * index.
  *
  * @param idx The index of the assembly definition.
  * @return A pointer to the assembly definition.
